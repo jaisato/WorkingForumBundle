@@ -20,8 +20,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Yosimitso\WorkingForumBundle\Service\FileUploaderService;
 use Yosimitso\WorkingForumBundle\Twig\Extension\SmileyTwigExtension;
 use Yosimitso\WorkingForumBundle\Service\ThreadService;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
 /**

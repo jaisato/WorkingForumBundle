@@ -5,6 +5,7 @@ namespace Yosimitso\WorkingForumBundle\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Yosimitso\WorkingForumBundle\Entity\UserInterface;
@@ -48,7 +49,7 @@ class BaseController extends AbstractController
         EntityManagerInterface $em,
         AuthorizationGuardInterface $authorizationGuard,
         $token,
-        SessionInterface $session,
+        RequestStack $requestStack,
         $translator,
         PaginatorInterface $paginator,
         BundleParametersService $bundleParameters
@@ -56,7 +57,7 @@ class BaseController extends AbstractController
         $this->em = $em;
         $this->authorizationGuard = $authorizationGuard;
         $this->user = (is_object($token) && $token->getUser() instanceof UserInterface) ? $token->getUser() : null;
-        $this->flashbag = $session->getFlashBag();
+        $this->flashbag = $requestStack->getSession()->getFlashBag();
         $this->translator = $translator;
         $this->paginator = $paginator;
         $this->bundleParameters = $bundleParameters;
