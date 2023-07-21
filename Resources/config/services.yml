@@ -6,8 +6,9 @@ services:
   Yosimitso\WorkingForumBundle\Controller\BaseController:
     autowire: false
     autoconfigure: false
+    abstract: true
     calls:
-      - ['setParameters',['@doctrine.orm.entity_manager','@Yosimitso\WorkingForumBundle\Security\AuthorizationGuard','@=service("security.token_storage").getToken()','@request_stack', '@translator', '@knp_paginator', '@Yosimitso\WorkingForumBundle\Service\BundleParametersService']]
+      - ['setParameters',['@doctrine.orm.entity_manager','@Yosimitso\WorkingForumBundle\Security\AuthorizationGuard','@=service("security.token_storage").getToken()','@request_stack', '@translator', '@knp_paginator', '@Yosimitso\WorkingForumBundle\Service\BundleParametersService', '@twig', '@form.factory']]
       - { method: setContainer, arguments: [ '@service_container' ] }
 
 
@@ -20,8 +21,8 @@ services:
       - '%yosimitso_working_forum.date_format%'
       - '%yosimitso_working_forum.post_per_page%'
       - '%yosimitso_working_forum.thread_per_page%'
-    calls:
-      - { method: setContainer, arguments: [ '@service_container' ] }
+#    calls:
+#      - { method: setContainer, arguments: [ '@service_container' ] }
 
   Yosimitso\WorkingForumBundle\Controller\ThreadController:
     parent: Yosimitso\WorkingForumBundle\Controller\BaseController
