@@ -10,6 +10,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Twig\Environment;
 use Yosimitso\WorkingForumBundle\Entity\UserInterface;
 use Yosimitso\WorkingForumBundle\Security\AuthorizationGuardInterface;
@@ -18,44 +19,22 @@ use Yosimitso\WorkingForumBundle\Service\BundleParametersService;
 
 class BaseController extends AbstractController
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $em;
-    /**
-     * @var AuthorizationGuardInterface
-     */
-    protected $authorizationGuard;
-    /**
-     * @var UserInterface|null
-     */
-    protected $user;
-    /**
-     * @var FlashBagInterface
-     */
-    protected $flashbag;
-    /**
-     * @var DataCollectorTranslator
-     */
-    protected $translator;
-    /**
-     * @var PaginatorInterface
-     */
-    protected $paginator;
-
-    /**
-     * @var BundleParametersService
-     */
-    protected $bundleParameters;
+    protected EntityManagerInterface $em;
+    protected AuthorizationGuardInterface $authorizationGuard;
+    protected ?UserInterface $user;
+    protected FlashBagInterface $flashbag;
+    protected DataCollectorTranslator $translator;
+    protected PaginatorInterface $paginator;
+    protected BundleParametersService $bundleParameters;
     protected Environment $twig;
     protected FormFactory $formFactory;
 
     public function setParameters(
         EntityManagerInterface $em,
         AuthorizationGuardInterface $authorizationGuard,
-        $token,
+        TokenInterface $token,
         RequestStack $requestStack,
-        $translator,
+        DataCollectorTranslator $translator,
         PaginatorInterface $paginator,
         BundleParametersService $bundleParameters,
         Environment $twig,

@@ -33,7 +33,6 @@ class ForumController extends BaseController
      * @Route("", name="workingforum_forum")
      * @return Response
      */
-
     public function indexAction()
     {
         $list_forum = $this

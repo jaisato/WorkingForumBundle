@@ -29,18 +29,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
  */
 class ThreadController extends BaseController
 {
-    /**
-     * @var FileUploaderService
-     */
-    protected $fileUploaderService;
-    /**
-     * @var SmileyTwigExtension
-     */
-    protected $smileyTwigExtension;
-    /**
-     * @var ThreadService
-     */
-    protected $threadService;
+    protected FileUploaderService $fileUploaderService;
+    protected SmileyTwigExtension $smileyTwigExtension;
+    protected ThreadService $threadService;
     
     public function __construct(FileUploaderService $fileUploaderService, SmileyTwigExtension $smileyTwigExtension, ThreadService $threadService)
     {
