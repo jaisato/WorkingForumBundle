@@ -62,7 +62,7 @@ class ThreadService
         $this->postPerPage = $postPerPage;
         $this->requestStack = $requestStack;
         $this->em = $em;
-        $user = $tokenStorage->getToken()->getUser();
+        $user = $tokenStorage->getToken()->getUser()->user();
         $this->user = is_object($user) ? $user : null;
         $this->fileUploaderService = $fileUploaderService;
         $this->authorizationGuard = $authorizationGuard;
