@@ -13,7 +13,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
     private AuthorizationCheckerInterface $authorizationChecker;
 
     private ?string $errorMessage;
-    private ?UserInterface $user;
+    private $user;
     private bool $allowAnonymousRead;
 
     public function __construct(
