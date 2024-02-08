@@ -24,7 +24,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
         $this->authorizationChecker = $authorizationChecker;
         $token = $tokenStorage->getToken();
 
-        $this->user = (is_object($token) && $token->getUser() instanceof UserInterface) ? $token->getUser() : null;
+        $this->user = (is_object($token) && $token->getUser()->user() instanceof UserInterface) ? $token->getUser() : null;
         $this->allowAnonymousRead = $allowAnonymousRead;
     }
 
@@ -111,12 +111,12 @@ class AuthorizationGuard implements AuthorizationGuardInterface
      */
     public function hasUserAuthorization() : bool
     {
-        if (is_object($this->user) && $this->user instanceof UserInterface && $this->user->isBanned()) {
+        if (is_object($this->user->user()) && $this->user->user() instanceof UserInterface && $this->user->user()->isBanned()) {
             $this->setErrorMessage('banned');
             return false;
         }
 
-        if (is_object($this->user) || $this->allowAnonymousRead) {
+        if (is_object($this->user->user()) || $this->allowAnonymousRead) {
             return true;
         }
 
@@ -128,7 +128,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
 
     public function isAnonymous() : bool
     {
-        return !is_object($this->user) || !$this->user instanceof UserInterface;
+        return !is_object($this->user) || !$this->user->user() instanceof UserInterface;
     }
 
     public function filterForumAccess(array $forums) : void
