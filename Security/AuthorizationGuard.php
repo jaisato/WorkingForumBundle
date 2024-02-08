@@ -110,7 +110,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
      */
     public function hasUserAuthorization() : bool
     {
-        if (is_object($this->user->user()) && $this->user->user() instanceof UserInterface && $this->user->user()->isBanned()) {
+        if (is_object($this->user->user()) && $this->user->user() instanceof \Yosimitso\WorkingForumBundle\Entity\UserInterface && $this->user->user()->isBanned()) {
             $this->setErrorMessage('banned');
             return false;
         }
@@ -127,7 +127,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
 
     public function isAnonymous() : bool
     {
-        return !is_object($this->user) || !$this->user->user() instanceof UserInterface;
+        return !is_object($this->user) || !$this->user->user() instanceof \Yosimitso\WorkingForumBundle\Entity\UserInterface;
     }
 
     public function filterForumAccess(array $forums) : void
