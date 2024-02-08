@@ -1,5 +1,5 @@
 {
-    "name": "yosimitso/workingforumbundle",
+    "name": "jaisato/workingforumbundle",
     "description": "A complete forum bundle",
     "type": "symfony-bundle",
     "require": {
