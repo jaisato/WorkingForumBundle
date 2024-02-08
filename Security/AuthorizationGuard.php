@@ -3,9 +3,9 @@
 namespace Yosimitso\WorkingForumBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Yosimitso\WorkingForumBundle\Entity\Forum;
 use Yosimitso\WorkingForumBundle\Entity\Subforum;
-use Yosimitso\WorkingForumBundle\Entity\UserInterface;
 
 class AuthorizationGuard implements AuthorizationGuardInterface
 {
@@ -23,8 +23,7 @@ class AuthorizationGuard implements AuthorizationGuardInterface
     ) {
         $this->authorizationChecker = $authorizationChecker;
         $token = $tokenStorage->getToken();
-
-        $this->user = (is_object($token) && $token->getUser()->user() instanceof UserInterface) ? $token->getUser() : null;
+        $this->user = (is_object($token) && is_object($token->getUser()) && $token->getUser() instanceof UserInterface) ? $token->getUser() : null;
         $this->allowAnonymousRead = $allowAnonymousRead;
     }
 
