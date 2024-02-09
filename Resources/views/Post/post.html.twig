@@ -29,7 +29,7 @@
                 </a>
                 {% if actionsAvailables.quote %}
                     <a href="#"
-                       onclick="quote({{ post.id }},{{ post.user.id }}); return false;"
+                       onclick="quote({{ post.id }},'{{ post.user.id }}'); return false;"
                        title="{{ 'forum.quote' | trans }}"
                     >
                         <img
