@@ -40,7 +40,7 @@ class ThreadRepository extends EntityRepository
     }
 
     /**
-     * @param string  $keywords
+     * @param array  $keywords
      * @param integer $start
      * @param integer $limit
      * @param string  $delimiter
@@ -52,7 +52,9 @@ class ThreadRepository extends EntityRepository
         if (empty($whereSubforum)) {
             return null;
         }
-        $keywords = explode(' ', $keywords);
+        $keywords = array_map(function ($keyword) {
+            return trim($keyword);
+        }, $keywords);
         $where = '';
 
         foreach ($keywords as $word)
