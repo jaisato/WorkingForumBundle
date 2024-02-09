@@ -67,6 +67,7 @@ class ThreadRepository extends EntityRepository
         $queryBuilder = $this->_em->createQueryBuilder();
         $queryBuilder
             ->select('thread')
+            ->distinct()
             ->addSelect('subforum')
             ->addSelect('forum')
             ->addSelect('author.avatarUrl AS author_avatarUrl, author.username AS author_username')
