@@ -48,9 +48,10 @@ class SearchController extends BaseController
             {
                 $whereSubforum = (array) $this->authorizationGuard->hasSubforumAccessList($form['forum']->getData()->toArray());
 
+                $keywords = explode(',', $form['keywords']->getData());
                 $thread_list_query = $this->em->getRepository(Thread::class)
-                                        ->search($form['keywords']->getData(), 0, 100, $whereSubforum)
-                ;
+                                        ->search($keywords, 0, 100, $whereSubforum);
+
                 $date_format = $this->bundleParameters->date_format;
 
                 if (!is_null($thread_list_query)) {

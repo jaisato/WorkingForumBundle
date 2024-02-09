@@ -8,6 +8,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints\Length;
 
 /**
  * Class SearchType
@@ -29,6 +30,8 @@ class SearchType extends AbstractType
                 [
                     'translation_domain' => 'YosimitsoWorkingForumBundle',
                     'label'              => 'search.keywords',
+                    'required' => true,
+                    'constraints' => [new Length(['min' => 3])],
                 ]
             )
             ->add(
