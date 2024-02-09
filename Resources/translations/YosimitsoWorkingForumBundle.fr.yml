@@ -32,6 +32,7 @@ forum:
         ROLE_ADMIN: Admin
         ROLE_USER: Utilisateur
         ROLE_MODERATOR: Modérateur
+        ROLE_ENTITY: Entity
         username: Utilisateur
         banned: Banni
         roles: Rôles
