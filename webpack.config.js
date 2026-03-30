@@ -3,7 +3,7 @@ const path = require("path");
 const glob = require('glob');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 let config = {
     watch: (process.env.NODE_ENV !== 'production'),
@@ -88,6 +88,6 @@ if (process.env.NODE_ENV === 'production') {
     const OptimizeCSSAssets = require("optimize-css-assets-webpack-plugin");
     module.exports.plugins.push(
         new OptimizeCSSAssets(),
-        new UglifyJsPlugin()
+        new TerserPlugin()
     );
 }
