@@ -70,29 +70,35 @@ class ThreadRepository extends EntityRepository
             ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
             ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
             ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-            ->andWhere('post.moderateReason IS NULL')
             ;
 
+        // Build keyword conditions using parameterized queries to prevent SQL injection
         $orConditions = [];
         foreach ($keywords as $index => $word)
         {
             $paramName = 'keyword_' . $index;
-            $orConditions[] = "(thread.label LIKE :$paramName OR thread.subLabel LIKE :$paramName OR post.content LIKE :$paramName)";
+            $orConditions[] = $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->like('thread.label', ':' . $paramName),
+                $queryBuilder->expr()->like('thread.subLabel', ':' . $paramName),
+                $queryBuilder->expr()->like('post.content', ':' . $paramName)
+            );
             $queryBuilder->setParameter($paramName, '%' . $word . '%');
         }
 
-        if (!empty($orConditions)) {
-            $queryBuilder->andWhere(implode(' OR ', $orConditions));
-        }
+        $queryBuilder->where(
+            $queryBuilder->expr()->orX(...$orConditions)
+        );
+
+        $queryBuilder->andWhere('post.moderateReason IS NULL');
 
         if (!empty($whereSubforum))
         {
-            $queryBuilder->andWhere('subforum.id IN (:subforumIds)')
-                ->setParameter('subforumIds', $whereSubforum);
+            $queryBuilder->andWhere('subforum.id IN (:subforum_ids)')
+                ->setParameter('subforum_ids', $whereSubforum);
         }
-            $queryBuilder->setMaxResults($limit)
-                    
-        ;
+
+        $queryBuilder->setMaxResults($limit);
+
         $query = $queryBuilder;
         $result = $query->getQuery()->getScalarResult();
 
@@ -112,11 +118,11 @@ class ThreadRepository extends EntityRepository
                 ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
                 ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
                 ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-                ->where('subforum.id = :subforumId')
+                ->where('subforum.id = :subforum_id')
                 ->andWhere('thread.slug != :slug_not_empty')
                 ->orderBy('thread.pin', 'DESC')
                 ->addOrderBy('thread.lastReplyDate', 'DESC')
-                ->setParameter('subforumId', $subforum->getId())
+                ->setParameter('subforum_id', $subforum->getId())
                 ->setParameter('slug_not_empty', '')
             ;
         
