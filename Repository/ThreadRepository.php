@@ -55,14 +55,6 @@ class ThreadRepository extends EntityRepository
         $keywords = array_map(function ($keyword) {
             return trim($keyword);
         }, $keywords);
-        $where = '';
-
-        foreach ($keywords as $word)
-        {
-            $where .= "(thread.label LIKE '%" . $word . "%' OR thread.subLabel LIKE '%" . $word . "%' OR post.content LIKE '%" . $word . "%') OR";
-        }
-
-        $where = rtrim($where, ' OR');
 
         $queryBuilder = $this->_em->createQueryBuilder();
         $queryBuilder
@@ -78,17 +70,35 @@ class ThreadRepository extends EntityRepository
             ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
             ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
             ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-            ->where($where)
-            ->andWhere('post.moderateReason IS NULL')
             ;
+
+        // Build keyword conditions using parameterized queries to prevent SQL injection
+        $orConditions = [];
+        foreach ($keywords as $index => $word)
+        {
+            $paramName = 'keyword_' . $index;
+            $orConditions[] = $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->like('thread.label', ':' . $paramName),
+                $queryBuilder->expr()->like('thread.subLabel', ':' . $paramName),
+                $queryBuilder->expr()->like('post.content', ':' . $paramName)
+            );
+            $queryBuilder->setParameter($paramName, '%' . $word . '%');
+        }
+
+        $queryBuilder->where(
+            $queryBuilder->expr()->orX(...$orConditions)
+        );
+
+        $queryBuilder->andWhere('post.moderateReason IS NULL');
 
         if (!empty($whereSubforum))
         {
-            $queryBuilder->andWhere('subforum.id IN ('.implode(',',$whereSubforum).')');
+            $queryBuilder->andWhere('subforum.id IN (:subforum_ids)')
+                ->setParameter('subforum_ids', $whereSubforum);
         }
-            $queryBuilder->setMaxResults($limit)
-                    
-        ;
+
+        $queryBuilder->setMaxResults($limit);
+
         $query = $queryBuilder;
         $result = $query->getQuery()->getScalarResult();
 
@@ -108,10 +118,11 @@ class ThreadRepository extends EntityRepository
                 ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
                 ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
                 ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-                ->where('subforum.id = '.$subforum->getId())
+                ->where('subforum.id = :subforum_id')
                 ->andWhere('thread.slug != :slug_not_empty')
                 ->orderBy('thread.pin', 'DESC')
                 ->addOrderBy('thread.lastReplyDate', 'DESC')
+                ->setParameter('subforum_id', $subforum->getId())
                 ->setParameter('slug_not_empty', '')
             ;
         
