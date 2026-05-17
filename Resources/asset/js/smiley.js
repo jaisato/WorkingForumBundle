@@ -4,7 +4,7 @@ insertAtCaret: function(myValue){
     if (document.selection) {
       //For browsers like Internet Explorer
       this.focus();
-      sel = document.selection.createRange();
+      var sel = document.selection.createRange();
       sel.text = myValue;
       this.focus();
     }

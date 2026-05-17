@@ -22,7 +22,7 @@ jQuery(document).ready(() => {
                 crossDomain: false,
                 data: `threadId=${storeJs.threadId}&target=${target}`,
                 dataType: 'json',
-                async: false,
+                async: true,
                 success: (res) => {
                     if (res.res === 'true') {
                         alert(storeJs.trans['forum.move_thread_success']);
@@ -60,7 +60,7 @@ jQuery(document).ready(() => {
             url: url,
             crossDomain: false,
             dataType: 'json',
-            async: false,
+            async: true,
             success: (result) => {
                 if (result === 'true') {
                     alert(storeJs.trans['forum.thanks_reporting']);
@@ -85,11 +85,12 @@ jQuery(document).ready(() => {
                 crossDomain: false,
                 data: `reason=${reason}&postId=${id}`,
                 dataType: 'json',
-                async: false,
+                async: true,
                 success: (result) => {
                     if (result === 'ok') {
-                        const msg = `<p class="wf_moderate">${storeJs.trans['forum.post_moderated']} ${reason}</p>`;
-                        jQuery('#wf_post\\[' + id+'\\] .wf_post_content').html(msg);
+                        const msgEl = jQuery('<p class="wf_moderate"></p>');
+                        msgEl.text(storeJs.trans['forum.post_moderated'] + ' ' + reason);
+                        jQuery('#wf_post\\[' + id+'\\] .wf_post_content').empty().append(msgEl);
                     }
                 }
             });
@@ -111,7 +112,7 @@ jQuery(document).ready(() => {
             crossDomain: false,
             data: `postId=${id}`,
             dataType: 'json',
-            async: false,
+            async: true,
             success: (content) => {
                 if (content.res === 'true') {
                     const img = jQuery(element).html();
@@ -145,7 +146,7 @@ jQuery(document).ready(() => {
             url: storeJs.routes.workingforum_add_subscription,
             crossDomain: false,
             dataType: 'json',
-            async: false,
+            async: true,
             success: () => {
                 jQuery('#wf_add_subscription').html(storeJs.trans['forum.cancel_subscription']).addClass('wf_icon-remove');
                 jQuery('#wf_add_subscription').attr('onclick', 'cancelSubscription(); return false;');
@@ -165,7 +166,7 @@ jQuery(document).ready(() => {
             url: storeJs.routes.workingforum_cancel_subscription,
             crossDomain: false,
             dataType: 'json',
-            async: false,
+            async: true,
             success: () => {
                 jQuery('#cancel_subscription').html(storeJs.trans['message.subscription_cancelled']);
                 jQuery('#wf_add_subscription')

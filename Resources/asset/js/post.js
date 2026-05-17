@@ -85,7 +85,7 @@ jQuery(document).ready(() => {
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = `; expires=${date.toUTCString()}`;
         }
-        document.cookie = `${name}=${(value || '')}${expires}; path=/`;
+        document.cookie = `${name}=${(value || '')}${expires}; path=/; SameSite=Lax`;
     }
 
     /**
@@ -115,16 +115,14 @@ jQuery(document).ready(() => {
 
         setCookie(`post_editor_${storeJs.postEditorId}`, postEditor.value, 30);
         const dateSaved = new Date();
+        const timeStr = `${dateSaved.getHours()}:${dateSaved.getMinutes()<10?'0':''}${dateSaved.getMinutes()}`;
 
         if (jQuery('#saved_draft_msg').length) {
-            const msg = `${storeJs.trans['message.post_saved_draft']} ${dateSaved.getHours()}:${dateSaved.getMinutes()<10?'0':''}${dateSaved.getMinutes()}`;
-            jQuery('#saved_draft_msg').html(msg);
+            jQuery('#saved_draft_msg').text(storeJs.trans['message.post_saved_draft'] + ' ' + timeStr);
         } else {
-            const msg = `
-                <div id="saved_draft_msg" class="wf_small_message">
-                ${storeJs.trans['message.post_saved_draft']} ${dateSaved.getHours()}:${dateSaved.getMinutes()<10?'0':''}${dateSaved.getMinutes()}
-                </div>`;
-            jQuery('.md-header').after(msg);
+            const msgEl = jQuery('<div id="saved_draft_msg" class="wf_small_message"></div>');
+            msgEl.text(storeJs.trans['message.post_saved_draft'] + ' ' + timeStr);
+            jQuery('.md-header').after(msgEl);
         }
     }
 });

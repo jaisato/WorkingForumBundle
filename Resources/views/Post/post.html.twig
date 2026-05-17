@@ -52,7 +52,7 @@
             {% if post.moderateReason is empty %}
                 {{ post.content |  quote | markdown | replace({'\n':'<br />'})| smiley |  raw }}
             {% else %}
-                <p class="wf_moderate">{{ 'forum.post_moderated' | trans }} {{ post.moderateReason }}</p>
+                <p class="wf_moderate">{{ 'forum.post_moderated' | trans }} {{ post.moderateReason | e }}</p>
             {% endif %}
         </div>
         {# POST VOTE #}
