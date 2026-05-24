@@ -128,13 +128,13 @@ class FileUploaderService
         if (isset($sizeRegex[2])) {
             switch ($sizeRegex[2]) {
                 case 'K':
-                    $size = intval($sizeRegex[1])*100;
+                    $size = intval($sizeRegex[1])*1024;
                     break;
                 case 'M':
-                    $size = intval($sizeRegex[1])*1000;
+                    $size = intval($sizeRegex[1])*1048576;
                     break;
                 case 'G':
-                    $size = intval($sizeRegex[1])*10000;
+                    $size = intval($sizeRegex[1])*1073741824;
                     break;
                 default: 
                     $size = intval($sizeRegex[1]);
