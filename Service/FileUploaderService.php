@@ -79,7 +79,7 @@ class FileUploaderService
             }
 
             $filename = htmlentities(substr($originalFilename[1], 0, 10));
-            $file->setFilename(md5(uniqid()).'-'.$filename.'.'.$fileSubmitted->guessExtension()); // UNIQUE FILENAME
+            $file->setFilename(bin2hex(random_bytes(16)).'-'.$filename.'.'.$fileSubmitted->guessExtension()); // UNIQUE FILENAME
             $file->setOriginalName($originalFilename[1].'.'.$fileSubmitted->guessExtension()); // DON'T USE THE EXTENSION PROVIDED BY THE USER
             $file->setExtension($fileSubmitted->guessExtension());
             $file->setSize($fileSubmitted->getSize());
