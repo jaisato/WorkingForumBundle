@@ -136,7 +136,7 @@ class Post
     {
         $this->setCdate(new \DateTime)
             ->setPublished(1)
-            ->setIp(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0);
+            ->setIp('0.0.0.0');
 
         if (!is_null($user)) {
             $this->setUser($user);
@@ -192,7 +192,7 @@ class Post
      */
     public function getContent()
     {
-        return html_entity_decode($this->content);
+        return $this->content;
     }
 
     /**

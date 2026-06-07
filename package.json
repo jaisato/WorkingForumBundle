@@ -18,6 +18,7 @@
     "postcss-loader": "^8.1.0",
     "sass-loader": "^14.1.0",
     "style-loader": "^3.3.0",
+    "terser-webpack-plugin": "^5.3.0",
     "webpack": "^5.90.0"
   },
   "scripts": {
