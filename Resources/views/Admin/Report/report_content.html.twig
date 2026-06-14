@@ -27,7 +27,7 @@
                     {% if post.post.moderateReason is empty %}
                         <p style="color:green;">{{ 'admin.decision' | trans |capitalize }} {{ 'admin.report.good' | trans}}</p>
                     {% else %}
-                        <p style="color:red;">{{ 'admin.decision' | trans |capitalize}} {{ 'admin.report.moderate' | trans}} ({{ post.post.moderateReason}})</p>
+                        <p style="color:red;">{{ 'admin.decision' | trans |capitalize}} {{ 'admin.report.moderate' | trans}} ({{ post.post.moderateReason | e }})</p>
                     {% endif %}
                 {% endif %}
         </tr>

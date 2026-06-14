@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Yosimitso\WorkingForumBundle\Entity\File;
 use Yosimitso\WorkingForumBundle\Entity\Post;
+use Exception;
 
 /**
  * Class FileUploaderService
@@ -79,7 +80,7 @@ class FileUploaderService
             }
 
             $filename = htmlentities(substr($originalFilename[1], 0, 10));
-            $file->setFilename(md5(uniqid()).'-'.$filename.'.'.$fileSubmitted->guessExtension()); // UNIQUE FILENAME
+            $file->setFilename(bin2hex(random_bytes(16)).'-'.$filename.'.'.$fileSubmitted->guessExtension()); // UNIQUE FILENAME
             $file->setOriginalName($originalFilename[1].'.'.$fileSubmitted->guessExtension()); // DON'T USE THE EXTENSION PROVIDED BY THE USER
             $file->setExtension($fileSubmitted->guessExtension());
             $file->setSize($fileSubmitted->getSize());
@@ -128,13 +129,13 @@ class FileUploaderService
         if (isset($sizeRegex[2])) {
             switch ($sizeRegex[2]) {
                 case 'K':
-                    $size = intval($sizeRegex[1])*100;
+                    $size = intval($sizeRegex[1]);
                     break;
                 case 'M':
-                    $size = intval($sizeRegex[1])*1000;
+                    $size = intval($sizeRegex[1]) * 1024;
                     break;
                 case 'G':
-                    $size = intval($sizeRegex[1])*10000;
+                    $size = intval($sizeRegex[1]) * 1024 * 1024;
                     break;
                 default: 
                     $size = intval($sizeRegex[1]);

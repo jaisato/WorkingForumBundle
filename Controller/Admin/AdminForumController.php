@@ -125,7 +125,7 @@ class AdminForumController extends BaseController
             $this->em->flush();
             $this->flashbag->add(
                 'success',
-                $this->get('translator')->trans('admin.forumDeleted', [], 'YosimitsoWorkingForumBundle')
+                $this->translator->trans('admin.forumDeleted', [], 'YosimitsoWorkingForumBundle')
             );
         }
 

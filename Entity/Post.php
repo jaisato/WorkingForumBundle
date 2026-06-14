@@ -136,7 +136,7 @@ class Post
     {
         $this->setCdate(new \DateTime)
             ->setPublished(1)
-            ->setIp(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0);
+            ->setIp(isset($_SERVER['REMOTE_ADDR']) ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: '0.0.0.0' : '0.0.0.0');
 
         if (!is_null($user)) {
             $this->setUser($user);
@@ -291,7 +291,7 @@ class Post
      */
     public function setModerateReason($moderateReason)
     {
-        $this->moderateReason = $moderateReason;
+        $this->moderateReason = htmlspecialchars((string) $moderateReason, ENT_QUOTES, 'UTF-8');
 
         return $this;
     }

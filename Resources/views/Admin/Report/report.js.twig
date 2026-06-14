@@ -15,7 +15,7 @@ function report(action, id, postId) {
             type: "POST",
             url: '{{ path('workingforum_admin_report_action_moderate') }}',
             crossDomain: false,
-            data: 'reason=' + reason + '&id=' + id + '&postId=' + postId + '&banuser=' + banuser,
+            data: 'reason=' + encodeURIComponent(reason) + '&id=' + encodeURIComponent(id) + '&postId=' + encodeURIComponent(postId) + '&banuser=' + encodeURIComponent(banuser),
             dataType: 'json',
             async: false,
             success: function (res) {
