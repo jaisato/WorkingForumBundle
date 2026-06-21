@@ -106,9 +106,13 @@ class AdminController extends BaseController
                 }
 
 
-                $html['input'] = '<input type="'.$setting['type'].'" value="'.$setting['value'].'"';
+                $escapedType = htmlspecialchars($setting['type'], ENT_QUOTES, 'UTF-8');
+                $escapedValue = htmlspecialchars($setting['value'], ENT_QUOTES, 'UTF-8');
+                $html['input'] = '<input type="'.$escapedType.'" value="'.$escapedValue.'"';
                 foreach ($setting['attr'] as $indexAttr => $attr) {
-                    $html['input'] .= ' '.$indexAttr.'="'.$attr.'"';
+                    $escapedAttrName = htmlspecialchars($indexAttr, ENT_QUOTES, 'UTF-8');
+                    $escapedAttrValue = htmlspecialchars($attr, ENT_QUOTES, 'UTF-8');
+                    $html['input'] .= ' '.$escapedAttrName.'="'.$escapedAttrValue.'"';
                 }
 
                 $html['input'] .= '/>';
@@ -121,5 +125,4 @@ class AdminController extends BaseController
         return $settingsHtml;
 
     }
-
 }
