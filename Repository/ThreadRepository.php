@@ -55,14 +55,6 @@ class ThreadRepository extends EntityRepository
         $keywords = array_map(function ($keyword) {
             return trim($keyword);
         }, $keywords);
-        $where = '';
-
-        foreach ($keywords as $word)
-        {
-            $where .= "(thread.label LIKE '%" . $word . "%' OR thread.subLabel LIKE '%" . $word . "%' OR post.content LIKE '%" . $word . "%') OR";
-        }
-
-        $where = rtrim($where, ' OR');
 
         $queryBuilder = $this->_em->createQueryBuilder();
         $queryBuilder
@@ -78,16 +70,31 @@ class ThreadRepository extends EntityRepository
             ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
             ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
             ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-            ->where($where)
             ->andWhere('post.moderateReason IS NULL')
             ;
 
+        $keywordExpr = $queryBuilder->expr()->orX();
+        foreach ($keywords as $i => $word)
+        {
+            $param = 'keyword_' . $i;
+            $keywordExpr->add(
+                $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->like('thread.label', ':' . $param),
+                    $queryBuilder->expr()->like('thread.subLabel', ':' . $param),
+                    $queryBuilder->expr()->like('post.content', ':' . $param)
+                )
+            );
+            $queryBuilder->setParameter($param, '%' . $word . '%');
+        }
+        $queryBuilder->andWhere($keywordExpr);
+
         if (!empty($whereSubforum))
         {
-            $queryBuilder->andWhere('subforum.id IN ('.implode(',',$whereSubforum).')');
+            $queryBuilder->andWhere('subforum.id IN (:whereSubforum)')
+                ->setParameter('whereSubforum', $whereSubforum);
         }
             $queryBuilder->setMaxResults($limit)
-                    
+
         ;
         $query = $queryBuilder;
         $result = $query->getQuery()->getScalarResult();
