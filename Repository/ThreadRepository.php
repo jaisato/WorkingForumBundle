@@ -55,14 +55,6 @@ class ThreadRepository extends EntityRepository
         $keywords = array_map(function ($keyword) {
             return trim($keyword);
         }, $keywords);
-        $where = '';
-
-        foreach ($keywords as $word)
-        {
-            $where .= "(thread.label LIKE '%" . $word . "%' OR thread.subLabel LIKE '%" . $word . "%' OR post.content LIKE '%" . $word . "%') OR";
-        }
-
-        $where = rtrim($where, ' OR');
 
         $queryBuilder = $this->_em->createQueryBuilder();
         $queryBuilder
@@ -78,9 +70,24 @@ class ThreadRepository extends EntityRepository
             ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
             ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
             ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-            ->where($where)
             ->andWhere('post.moderateReason IS NULL')
             ;
+
+        // Build the keyword filter using bound parameters to avoid DQL injection
+        $keywordsOr = $queryBuilder->expr()->orX();
+        foreach ($keywords as $index => $word)
+        {
+            $param = 'keyword_' . $index;
+            $keywordsOr->add(
+                $queryBuilder->expr()->orX(
+                    'thread.label LIKE :' . $param,
+                    'thread.subLabel LIKE :' . $param,
+                    'post.content LIKE :' . $param
+                )
+            );
+            $queryBuilder->setParameter($param, '%' . $word . '%');
+        }
+        $queryBuilder->andWhere($keywordsOr);
 
         if (!empty($whereSubforum))
         {
