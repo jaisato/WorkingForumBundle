@@ -56,13 +56,16 @@ class ThreadRepository extends EntityRepository
             return trim($keyword);
         }, $keywords);
         $where = '';
+        $searchParams = [];
 
-        foreach ($keywords as $word)
+        foreach (array_values($keywords) as $i => $word)
         {
-            $where .= "(thread.label LIKE '%" . $word . "%' OR thread.subLabel LIKE '%" . $word . "%' OR post.content LIKE '%" . $word . "%') OR";
+            if ($where !== '') {
+                $where .= ' OR ';
+            }
+            $where .= "(thread.label LIKE :kw$i OR thread.subLabel LIKE :kw$i OR post.content LIKE :kw$i)";
+            $searchParams["kw$i"] = '%' . $word . '%';
         }
-
-        $where = rtrim($where, ' OR');
 
         $queryBuilder = $this->_em->createQueryBuilder();
         $queryBuilder
@@ -82,9 +85,14 @@ class ThreadRepository extends EntityRepository
             ->andWhere('post.moderateReason IS NULL')
             ;
 
+        foreach ($searchParams as $name => $value) {
+            $queryBuilder->setParameter($name, $value);
+        }
+
         if (!empty($whereSubforum))
         {
-            $queryBuilder->andWhere('subforum.id IN ('.implode(',',$whereSubforum).')');
+            $queryBuilder->andWhere('subforum.id IN (:whereSubforum)')
+                ->setParameter('whereSubforum', $whereSubforum);
         }
             $queryBuilder->setMaxResults($limit)
                     
@@ -108,7 +116,7 @@ class ThreadRepository extends EntityRepository
                 ->join(UserInterface::class, 'lastReplyUser', 'WITH', 'thread.lastReplyUser = lastReplyUser.id')
                 ->join(Subforum::class,'subforum','WITH','thread.subforum = subforum.id')
                 ->join(Forum::class, 'forum', 'WITH', 'subforum.forum = forum.id')
-                ->where('subforum.id = '.$subforum->getId())
+                ->where('subforum.id = '.(int) $subforum->getId())
                 ->andWhere('thread.slug != :slug_not_empty')
                 ->orderBy('thread.pin', 'DESC')
                 ->addOrderBy('thread.lastReplyDate', 'DESC')
