@@ -55,16 +55,19 @@ class ThreadRepository extends EntityRepository
         $keywords = array_map(function ($keyword) {
             return trim($keyword);
         }, $keywords);
-        $where = '';
-
-        foreach ($keywords as $word)
-        {
-            $where .= "(thread.label LIKE '%" . $word . "%' OR thread.subLabel LIKE '%" . $word . "%' OR post.content LIKE '%" . $word . "%') OR";
-        }
-
-        $where = rtrim($where, ' OR');
+        $where = [];
 
         $queryBuilder = $this->_em->createQueryBuilder();
+
+        foreach ($keywords as $index => $word)
+        {
+            $placeholder = 'keyword' . $index;
+            $where[] = "(thread.label LIKE :$placeholder OR thread.subLabel LIKE :$placeholder OR post.content LIKE :$placeholder)";
+            $queryBuilder->setParameter($placeholder, '%' . $word . '%');
+        }
+
+        $where = implode(' OR ', $where);
+
         $queryBuilder
             ->select('thread')
             ->distinct()
@@ -84,6 +87,7 @@ class ThreadRepository extends EntityRepository
 
         if (!empty($whereSubforum))
         {
+            $whereSubforum = array_map('intval', $whereSubforum);
             $queryBuilder->andWhere('subforum.id IN ('.implode(',',$whereSubforum).')');
         }
             $queryBuilder->setMaxResults($limit)

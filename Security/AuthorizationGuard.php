@@ -110,12 +110,14 @@ class AuthorizationGuard implements AuthorizationGuardInterface
      */
     public function hasUserAuthorization() : bool
     {
-        if (is_object($this->user->user()) && $this->user->user() instanceof \Yosimitso\WorkingForumBundle\Entity\UserInterface && $this->user->user()->isBanned()) {
+        $appUser = is_object($this->user) ? $this->user->user() : null;
+
+        if (is_object($appUser) && $appUser instanceof \Yosimitso\WorkingForumBundle\Entity\UserInterface && $appUser->isBanned()) {
             $this->setErrorMessage('banned');
             return false;
         }
 
-        if (is_object($this->user->user()) || $this->allowAnonymousRead) {
+        if (is_object($appUser) || $this->allowAnonymousRead) {
             return true;
         }
 
