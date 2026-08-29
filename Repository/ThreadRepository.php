@@ -18,6 +18,19 @@ use Yosimitso\WorkingForumBundle\Entity\UserInterface;
 class ThreadRepository extends EntityRepository
 {
     /**
+     * The escape character the search patterns are built with, declared to the
+     * database rather than assumed.
+     *
+     * MySQL treats a backslash as the LIKE escape whether or not you say so.
+     * The SQL standard does not, and neither does SQLite: there the backslashes
+     * escapeLikeWildcards() inserts are ordinary characters to be matched, so a
+     * search for "%" stopped finding "50% off" and instead found every subject
+     * containing a backslash. This bundle does not tie its consumers to MySQL,
+     * so the clause is spelled out.
+     */
+    private const LIKE_ESCAPE = " ESCAPE '\\'";
+
+    /**
      * @param integer $start
      * @param integer $limit
      *
@@ -82,9 +95,9 @@ class ThreadRepository extends EntityRepository
 
             $keywordExpression->add(
                 $expr->orX(
-                    $expr->like('thread.label', ':'.$placeholder),
-                    $expr->like('thread.subLabel', ':'.$placeholder),
-                    $expr->like('post.content', ':'.$placeholder)
+                    'thread.label LIKE :'.$placeholder.self::LIKE_ESCAPE,
+                    'thread.subLabel LIKE :'.$placeholder.self::LIKE_ESCAPE,
+                    'post.content LIKE :'.$placeholder.self::LIKE_ESCAPE
                 )
             );
 
