@@ -86,6 +86,10 @@ services:
       - { name: twig.extension }
     arguments: ['@request_stack', '@assets.packages']
 
+  Yosimitso\WorkingForumBundle\Twig\Extension\SafeUrlTwigExtension:
+    tags:
+      - { name: twig.extension }
+
   Yosimitso\WorkingForumBundle\Twig\Extension\QuoteTwigExtension:
     tags:
       - { name: twig.extension }
