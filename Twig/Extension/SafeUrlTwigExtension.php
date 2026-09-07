@@ -72,13 +72,97 @@ class SafeUrlTwigExtension extends AbstractExtension
             return (string) $html;
         }
 
-        return preg_replace_callback(
-            '/\b(href|src)\s*=\s*(["\'])(.*?)\2/is',
-            function (array $match) {
-                [, $attribute, $quote, $value] = $match;
+        $document = new \DOMDocument('1.0', 'UTF-8');
 
-                if ($this->isDangerous($value)) {
-                    return $attribute . '=' . $quote . self::NEUTRALISED . $quote;
+        // Markdown output is a fragment, so LIBXML_HTML_NOIMPLIED and
+        // LIBXML_HTML_NODEFDTD stop libxml wrapping it in html/body and adding
+        // a doctype. The XML declaration in front is what tells libxml the
+        // bytes are UTF-8; without it it assumes ISO-8859-1 and every accented
+        // character in a Spanish post comes back mangled. It parses as a
+        // processing instruction, which is skipped when serialising below.
+        //
+        // libxml reports unknown tags and the like through the global error
+        // buffer; silence it around the load so a stray warning from someone's
+        // post does not surface, and restore whatever the app had set.
+        $previous = libxml_use_internal_errors(true);
+
+        $loaded = $document->loadHTML(
+            '<?xml encoding="UTF-8">' . $html,
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if (!$loaded) {
+            // Should not happen - loadHTML recovers from almost anything - but
+            // returning the input unscrubbed would hand back exactly the markup
+            // this filter exists to defuse. Fall back to the conservative
+            // textual scrub: it can over-neutralise, and never under-neutralises.
+            return $this->scrubText($html);
+        }
+
+        foreach ($this->attributeNodes($document) as $attribute) {
+            if ($this->isDangerous($attribute->value)) {
+                $attribute->value = self::NEUTRALISED;
+            }
+        }
+
+        $result = '';
+
+        foreach ($document->childNodes as $child) {
+            if ($child->nodeType === XML_PI_NODE) {
+                continue;
+            }
+
+            $result .= $document->saveHTML($child);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Every href/src attribute node in the parsed document.
+     *
+     * Going through the parser rather than a regular expression is the whole
+     * point: `href="..."` occurring as *text* - which is exactly what a post
+     * explaining this attack contains, and what Markdown emits for an inline
+     * `code` span - is not an attribute, and must be left alone. The regular
+     * expression this replaced could not tell the two apart, so a post
+     * documenting the attack had its example silently rewritten, and its
+     * lazy `.*?` could span tags and swallow rendered content between two
+     * quotes.
+     *
+     * @param \DOMDocument $document
+     *
+     * @return \DOMAttr[]
+     */
+    private function attributeNodes(\DOMDocument $document)
+    {
+        $xpath = new \DOMXPath($document);
+        $nodes = [];
+
+        foreach ($xpath->query('//@href | //@src') as $attribute) {
+            $nodes[] = $attribute;
+        }
+
+        return $nodes;
+    }
+
+    /**
+     * Conservative textual fallback for the case the parser gives up entirely.
+     *
+     * @param string $html
+     *
+     * @return string
+     */
+    private function scrubText($html)
+    {
+        return preg_replace_callback(
+            '/\b(href|src)\s*=\s*(["\'])([^"\']*)\2/i',
+            function (array $match) {
+                if ($this->isDangerous($match[3])) {
+                    return $match[1] . '=' . $match[2] . self::NEUTRALISED . $match[2];
                 }
 
                 return $match[0];
