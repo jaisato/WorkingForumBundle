@@ -48,6 +48,12 @@ class SafeUrlTwigExtension extends AbstractExtension
     private const NEUTRALISED = '#';
 
     /**
+     * id of the temporary element the fragment is parsed under. Never reaches
+     * the output: only this element's children are serialised.
+     */
+    private const ROOT_ID = 'wf-safe-url-root';
+
+    /**
      * @return array
      */
     public function getFilters()
@@ -74,12 +80,25 @@ class SafeUrlTwigExtension extends AbstractExtension
 
         $document = new \DOMDocument('1.0', 'UTF-8');
 
-        // Markdown output is a fragment, so LIBXML_HTML_NOIMPLIED and
-        // LIBXML_HTML_NODEFDTD stop libxml wrapping it in html/body and adding
-        // a doctype. The XML declaration in front is what tells libxml the
-        // bytes are UTF-8; without it it assumes ISO-8859-1 and every accented
-        // character in a Spanish post comes back mangled. It parses as a
-        // processing instruction, which is skipped when serialising below.
+        // Markdown output is a fragment with several top-level blocks - a
+        // blockquote and the reply under it, say - and libxml has no portable
+        // way to load one.
+        //
+        // LIBXML_HTML_NOIMPLIED looks like the answer and is a trap: on older
+        // libxml builds it treats the first top-level element as the document
+        // root and reparents the ones after it underneath, so a reply ends up
+        // *inside* the quote it answers. This package declares no PHP version
+        // constraint, so it can be installed on exactly those builds, and the
+        // corruption would be silent.
+        //
+        // Wrapping the fragment in one element sidesteps the whole question:
+        // with a single root there is nothing to reparent, no flag is needed,
+        // and the wrapper's children are serialised back out - so the html and
+        // body libxml implies around it are never emitted either.
+        //
+        // The XML declaration is what tells libxml the bytes are UTF-8; without
+        // it it assumes ISO-8859-1 and every accented character in a Spanish
+        // post comes back mangled.
         //
         // libxml reports unknown tags and the like through the global error
         // buffer; silence it around the load so a stray warning from someone's
@@ -87,14 +106,16 @@ class SafeUrlTwigExtension extends AbstractExtension
         $previous = libxml_use_internal_errors(true);
 
         $loaded = $document->loadHTML(
-            '<?xml encoding="UTF-8">' . $html,
-            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+            '<?xml encoding="UTF-8"><div id="' . self::ROOT_ID . '">' . $html . '</div>',
+            LIBXML_HTML_NODEFDTD
         );
 
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
-        if (!$loaded) {
+        $root = $loaded ? $this->wrapper($document) : null;
+
+        if ($root === null) {
             // Should not happen - loadHTML recovers from almost anything - but
             // returning the input unscrubbed would hand back exactly the markup
             // this filter exists to defuse. Fall back to the conservative
@@ -110,11 +131,7 @@ class SafeUrlTwigExtension extends AbstractExtension
 
         $result = '';
 
-        foreach ($document->childNodes as $child) {
-            if ($child->nodeType === XML_PI_NODE) {
-                continue;
-            }
-
+        foreach ($root->childNodes as $child) {
             $result .= $document->saveHTML($child);
         }
 
@@ -147,6 +164,29 @@ class SafeUrlTwigExtension extends AbstractExtension
         }
 
         return $nodes;
+    }
+
+    /**
+     * The temporary wrapper the fragment was parsed under.
+     *
+     * Located by id rather than by assuming a position, so an unexpected shape
+     * from libxml yields null - and the caller falls back to the textual scrub -
+     * rather than silently serialising the wrong subtree.
+     *
+     * @param \DOMDocument $document
+     *
+     * @return \DOMElement|null
+     */
+    private function wrapper(\DOMDocument $document)
+    {
+        $xpath = new \DOMXPath($document);
+        $found = $xpath->query('//*[@id="' . self::ROOT_ID . '"]');
+
+        if ($found === false || $found->length === 0) {
+            return null;
+        }
+
+        return $found->item(0);
     }
 
     /**
