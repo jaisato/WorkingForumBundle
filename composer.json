@@ -3,6 +3,8 @@
     "description": "A complete forum bundle",
     "type": "symfony-bundle",
     "require": {
+        "ext-dom": "*",
+        "ext-libxml": "*",
         "ext-mbstring": "*",
         "knplabs/knp-paginator-bundle": "^5.0",
         "knplabs/knp-markdown-bundle": "^1.9.0",
