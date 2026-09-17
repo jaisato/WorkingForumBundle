@@ -3,7 +3,13 @@ php:
   - '7.4'
 
 before_install:
-  - nvm install 8.16.2
+  # Node 22. The asset toolchain's floor is 20.9.0 - copy-webpack-plugin 14,
+  # css-minimizer-webpack-plugin 8 and cross-env 10 all require it - and this
+  # was pinned at 8.16.2, which yarn refuses outright: yarn classic validates
+  # the root engines field and exits before installing anything, so the build
+  # and the tests below never ran. 22 is the version the migration was built
+  # and verified against.
+  - nvm install 22
 
 install:
   - composer install
