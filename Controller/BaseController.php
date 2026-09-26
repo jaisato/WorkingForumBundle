@@ -55,7 +55,8 @@ class BaseController extends AbstractController
     ) {
         $this->em = $em;
         $this->authorizationGuard = $authorizationGuard;
-        $this->user = (is_object($token) && $token->getUser()->user() instanceof UserInterface) ? $token->getUser()->user() : null;
+        $securityUser = (is_object($token)) ? $token->getUser() : null;
+        $this->user = (is_object($securityUser) && is_object($securityUser->user()) && $securityUser->user() instanceof UserInterface) ? $securityUser->user() : null;
         $this->flashbag = $session->getFlashBag();
         $this->translator = $translator;
         $this->paginator = $paginator;
