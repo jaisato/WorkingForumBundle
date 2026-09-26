@@ -20,6 +20,16 @@ class FileUploaderService
     private array $configFileUpload;
     private TranslatorInterface $translator;
 
+    /**
+     * php.ini size suffixes ("2M", "512K", "1G"), expressed in kilobytes. PHP's
+     * multipliers are binary: K is 1024 bytes, M is 1024 K and G is 1024 M.
+     */
+    private const SIZE_MULTIPLIERS_IN_KO = [
+        'K' => 1,
+        'M' => 1024,
+        'G' => 1024 * 1024,
+    ];
+
     public function __construct(EntityManagerInterface $em, array $configFileUpload, TranslatorInterface $translator)
     {
         $this->path = 'wf_uploads/'.date('Y/m/');
@@ -120,31 +130,23 @@ class FileUploaderService
     }
 
     /**
-     * Parse size from a string
+     * Parse a size written in php.ini shorthand notation ("2M", "512K", "1G", or a
+     * plain number of bytes) and return it in kilobytes, the unit this service works
+     * in (max_size_ko). The suffix is case-insensitive, as it is for PHP itself.
      */
     private function extractSize($value) : int
     {
-        preg_match('/([0-9]+)([A-Z]?)/', $value, $sizeRegex);
-        if (isset($sizeRegex[2])) {
-            switch ($sizeRegex[2]) {
-                case 'K':
-                    $size = intval($sizeRegex[1])*100;
-                    break;
-                case 'M':
-                    $size = intval($sizeRegex[1])*1000;
-                    break;
-                case 'G':
-                    $size = intval($sizeRegex[1])*10000;
-                    break;
-                default: 
-                    $size = intval($sizeRegex[1]);
-            }
-        } elseif (isset($sizeRegex[1])) { 
-            $size = intval($sizeRegex[1]); 
-        } else {
-            $size =  ini_get('upload_max_filesize');
+        if (!preg_match('/^\s*([0-9]+)\s*([KMG])?/i', (string) $value, $sizeRegex)) {
+            return 0;
         }
-        return intval($size);
+
+        $number = intval($sizeRegex[1]);
+
+        if (!isset($sizeRegex[2]) || $sizeRegex[2] === '') {
+            return intdiv($number, 1024); // NO SUFFIX: THE VALUE IS IN BYTES
+        }
+
+        return $number * self::SIZE_MULTIPLIERS_IN_KO[strtoupper($sizeRegex[2])];
     }
 
 }
