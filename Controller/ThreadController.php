@@ -57,6 +57,8 @@ class ThreadController extends BaseController
      */
     public function indexAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+
         $autolock = $this->threadService->isAutolock($thread); // CHECK IF THREAD IS AUTOMATICALLY LOCKED (TOO OLD?)
         $listSmiley = $this->smileyTwigExtension->getListSmiley(); // Smileys available for markdown
 
@@ -81,6 +83,16 @@ class ThreadController extends BaseController
                     );
 
                     return $this->redirect($this->generateUrl('workingforum', []));
+                }
+
+                if ($thread->getLocked()) // THREAD LOCKED BY A MODERATOR: THE TEMPLATE HIDES THE FORM, THE SERVER MUST REFUSE THE POST TOO
+                {
+                    $this->flashbag->add(
+                        'error',
+                        $this->translator->trans('forum.no_message_locked', [], 'YosimitsoWorkingForumBundle')
+                    );
+
+                    return $this->threadService->redirectToThread($forum, $subforum, $thread);
                 }
 
                 if ($autolock && !$this->authorizationGuard->hasModeratorAuthorization()) // THREAD IS LOCKED CAUSE TOO OLD ACCORDING TO PARAMETERS
@@ -230,7 +242,7 @@ class ThreadController extends BaseController
      */
     public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread)
     {
-        if (!$this->authorizationGuard->hasModeratorAuthorization() && $this->user->getId() != $thread->getAuthor()->getId()) // ONLY ADMIN MODERATOR OR THE THREAD'S AUTHOR CAN SET A THREAD AS RESOLVED
+        if (!$this->authorizationGuard->hasModeratorAuthorization() && ($this->isUserAnonymous() || $this->user->getId() != $thread->getAuthor()->getId())) // ONLY ADMIN MODERATOR OR THE THREAD'S AUTHOR CAN SET A THREAD AS RESOLVED
         {
             throw new AccessDeniedHttpException('You are not authorized to do this');
         }
@@ -330,6 +342,8 @@ class ThreadController extends BaseController
      */
     public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+
         if (!$this->bundleParameters->allow_moderator_delete_thread) {
             throw new Exception('Thread deletion is not allowed');
         }
@@ -372,12 +386,13 @@ class ThreadController extends BaseController
         $targetId = $request->get('target');
 
         $thread = $this->em->getRepository(Thread::class)->findOneById($threadId);
-        $currentSubforum = $thread->getSubforum();
         $targetSubforum = $this->em->getRepository(Subforum::class)->findOneById($targetId);
 
         if (is_null($thread) || is_null($targetSubforum)) {
-            return new Response(null, 500);
+            return new Response(null, 404);
         }
+
+        $currentSubforum = $thread->getSubforum();
 
         $this->threadService->move($thread, $currentSubforum, $targetSubforum);
 
@@ -404,6 +419,20 @@ class ThreadController extends BaseController
             return new Response(null, 500);
         }
 
+    }
+
+    /**
+     * The URL carries the subforum and the thread separately and each one is
+     * resolved on its own, so nothing tied them together: a thread could be
+     * opened under any subforum the user can read. Posting there credited the
+     * post to the subforum in the URL and deleting there took the thread's
+     * counters off it, drifting both subforums' statistics.
+     */
+    private function assertThreadInSubforum(Thread $thread, Subforum $subforum): void
+    {
+        if (is_null($thread->getSubforum()) || $thread->getSubforum()->getId() !== $subforum->getId()) {
+            throw $this->createNotFoundException('Thread not found in this subforum');
+        }
     }
 
     /**

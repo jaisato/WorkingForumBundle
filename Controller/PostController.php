@@ -37,6 +37,11 @@ class PostController extends BaseController
         }
 
         $post = $this->em->getRepository(Post::class)->findOneById($postId);
+
+        if (is_null($post)) {
+            return new JsonResponse(['res' => 'false', 'errMsg' => 'Post not found'], 404);
+        }
+
         $subforum = $this->em->getRepository(Subforum::class)->findOneById(
             $post->getThread()->getSubforum()->getId()
         );
@@ -51,9 +56,6 @@ class PostController extends BaseController
             return new JsonResponse(['res' => 'false'], 403);
         }
 
-        if (is_null($post)) {
-            return new JsonResponse(['res' => 'false', 'errMsg' => 'Thread not found'], 500);
-        }
         if ($post->getUser()->getId() == $this->user->getId()) { // CAN'T VOTE FOR YOURSELF
             return new JsonResponse(['res' => 'false', 'errMsg' => 'An user can\'t vote for his post'], 403);
         }
