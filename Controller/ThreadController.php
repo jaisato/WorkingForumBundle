@@ -240,12 +240,14 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
         if (!$this->authorizationGuard->hasModeratorAuthorization() && ($this->isUserAnonymous() || $this->user->getId() != $thread->getAuthor()->getId())) // ONLY ADMIN MODERATOR OR THE THREAD'S AUTHOR CAN SET A THREAD AS RESOLVED
         {
             throw new AccessDeniedHttpException('You are not authorized to do this');
         }
+
+        $this->assertModerationToken($request);
 
         $this->threadService->resolve($thread);
 
@@ -264,8 +266,10 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertModerationToken($request);
+
         if ($thread->getPin()) {
             throw new \Exception("Thread already pinned", 500);
         }
@@ -287,8 +291,10 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertModerationToken($request);
+
         if (!$thread->getPin()) {
             throw new \Exception("Thread not pinned", 500);
         }
@@ -340,9 +346,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/deletethread/{thread}", name="workingforum_delete_thread")
      * @return RedirectResponse
      */
-    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
         $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertModerationToken($request);
 
         if (!$this->bundleParameters->allow_moderator_delete_thread) {
             throw new Exception('Thread deletion is not allowed');
@@ -363,8 +370,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/{thread}/lock", name="workingforum_lock_thread")
      * @return RedirectResponse
      */
-    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertModerationToken($request);
+
         $this->threadService->lock($thread);
         $this->flashbag->add(
             'success',

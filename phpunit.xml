@@ -6,6 +6,8 @@
         <testsuite name="unit">
             <directory suffix="Test.php">./Tests/Service</directory>
             <directory suffix="Test.php">./Tests/ParamConverter</directory>
+            <directory suffix="Test.php">./Tests/Twig</directory>
+            <directory suffix="Test.php">./Tests/Controller</directory>
         </testsuite>
         <testsuite name="scenario">
             <directory suffix="Test.php">./Tests/Scenario</directory>

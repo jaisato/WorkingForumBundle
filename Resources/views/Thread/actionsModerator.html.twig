@@ -5,7 +5,7 @@
             <a class="wf_button wf_icon-lock"
                rel="nofollow"
                id="wf_set-locked"
-               href="{{ path('workingforum_lock_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
+               href="{{ path('workingforum_lock_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug, '_token': csrf_token('workingforum_moderation')}) }}">
                 {{ 'forum.lock' | trans }}
             </a>
         </li>
@@ -21,7 +21,7 @@
             <a class="wf_button wf_icon-remove"
                rel="nofollow"
                onclick="if (!confirm('{{ 'forum.confirm_delete_thread' | trans }}')) { return false; }"
-               href="{{ path('workingforum_delete_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread': thread.slug}) }}">
+               href="{{ path('workingforum_delete_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread': thread.slug, '_token': csrf_token('workingforum_moderation')}) }}">
                 {{ 'forum.delete_thread' | trans }}
             </a>
         </li>
@@ -30,7 +30,7 @@
     <li>
         <a class="wf_button wf_icon-pin"
            rel="nofollow"
-           href="{{ path('workingforum_pin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
+           href="{{ path('workingforum_pin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug, '_token': csrf_token('workingforum_moderation')}) }}">
             {{ 'forum.pin_thread' | trans }}
         </a>
     </li>
@@ -38,7 +38,7 @@
             <li>
                 <a class="wf_button wf_icon-pin"
                    rel="nofollow"
-                   href="{{ path('workingforum_unpin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
+                   href="{{ path('workingforum_unpin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug, '_token': csrf_token('workingforum_moderation')}) }}">
                     {{ 'forum.unpin_thread' | trans }}
                 </a>
             </li>

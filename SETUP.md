@@ -18,6 +18,11 @@ framework:
         fallbacks:
             - 'en'
 ````
+- CSRF protection must be enabled (it is by default when `symfony/security-csrf` is installed). The moderation links (lock, pin, unpin, resolve, delete thread, delete forum) carry a CSRF token and are refused without a valid one:
+````yml
+framework:
+    csrf_protection: true
+````
 - If you want to enable threads subscription, you must have switfmailer configured
 - SF4 ONLY : you have to define Twig as your templating engine in config/packages/framework.yaml
 ````yml

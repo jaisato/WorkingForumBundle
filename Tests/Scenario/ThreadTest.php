@@ -193,6 +193,19 @@ class ThreadTest extends WebTestCase
         $this->assertEquals('The thread has been successfully locked', $crawler->filter('.alert-success ul > li')->html());
     }
 
+    public function testModeratorCannotLockThreadWithoutCsrfToken()
+    {
+        // What a cross-site <img src="..."> or link would send: the moderator's
+        // session cookie, but no token.
+        $client = $this->getModeratorUserClient();
+
+        $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/lock');
+        $this->assertEquals(403, $client->getResponse()->getStatusCode());
+
+        $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/lock?_token=forged');
+        $this->assertEquals(403, $client->getResponse()->getStatusCode());
+    }
+
     public function testClassicUserShouldNotBeAbleToLockThread()
     {
         $client = $this->getClassicUserClient();
