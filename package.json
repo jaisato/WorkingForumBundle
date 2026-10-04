@@ -33,7 +33,9 @@
     "watch": "webpack --mode=development --watch"
   },
   "resolutions": {
-    "browserslist": "^4.28.9"
+    "browserslist": "^4.28.9",
+    "fast-uri": "^3.1.8",
+    "serialize-javascript": "^7.1.2"
   },
   "//": [
     "resolutions.browserslist: caniuse-api (reached through cssnano ->",
@@ -44,6 +46,14 @@
     "resolution pins the patched line for every dependant, and ^4.28.9 still",
     "satisfies caniuse-api's own ^4.0.0. Remove it once caniuse-api no longer",
     "resolves to its own copy - `yarn list --pattern browserslist` shows one",
-    "entry when that is true."
+    "entry when that is true.",
+    "resolutions.fast-uri and resolutions.serialize-javascript: yarn audit",
+    "reported GHSA-hrr3-gc8f-f4qj (fast-uri < 3.1.8, through ajv in the",
+    "schema-utils of webpack's minimizer and copy-webpack-plugin) and",
+    "GHSA-gfhx-hw2g-v5hg (serialize-javascript 7.1.1, through",
+    "copy-webpack-plugin). Both dependants already accept the patched",
+    "releases (^3.0.1 and ^7.0.3); yarn classic just never moves a locked",
+    "transitive version on its own. Drop them once the lock resolves the",
+    "patched versions without help."
   ]
 }
