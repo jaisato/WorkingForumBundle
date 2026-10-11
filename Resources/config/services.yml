@@ -93,7 +93,7 @@ services:
   Yosimitso\WorkingForumBundle\Twig\Extension\QuoteTwigExtension:
     tags:
       - { name: twig.extension }
-    arguments: ['@doctrine.orm.entity_manager', '@translator']
+    arguments: ['@doctrine.orm.entity_manager', '@translator', '@Yosimitso\WorkingForumBundle\Security\AuthorizationGuard']
 
   Yosimitso\WorkingForumBundle\Twig\Extension\ConfigurationTwigExtension:
     tags:
