@@ -148,6 +148,16 @@ class UserTest extends \Yosimitso\WorkingForumBundle\Entity\User implements User
         return $this;
     }
 
+    /**
+     * The bundle reads the forum user through the authenticated user's user()
+     * (BaseController, ThreadService, AuthorizationGuard): the application's
+     * security user wraps the forum one. Here both are the same object.
+     */
+    public function user(): self
+    {
+        return $this;
+    }
+
     public function isEqualTo(UserInterface $user)
     {
         if ($this->password !== $user->getPassword()) {
