@@ -12,7 +12,7 @@ use Yosimitso\WorkingForumBundle\Controller\BaseController;
 
 class BaseControllerTest extends TestCase
 {
-    private function getTestedClass(): BaseController
+    private function getTestedClass(): ModerationTokenCheckingController
     {
         $tokenManager = $this->createMock(CsrfTokenManagerInterface::class);
         $tokenManager->method('isTokenValid')->willReturnCallback(function (CsrfToken $token) {
@@ -22,12 +22,7 @@ class BaseControllerTest extends TestCase
         $container = new Container();
         $container->set('security.csrf.token_manager', $tokenManager);
 
-        $controller = new class extends BaseController {
-            public function check(Request $request): void
-            {
-                $this->assertModerationToken($request);
-            }
-        };
+        $controller = new ModerationTokenCheckingController();
         $controller->setContainer($container);
 
         return $controller;
