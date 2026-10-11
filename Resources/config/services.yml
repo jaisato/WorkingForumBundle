@@ -32,6 +32,7 @@ services:
       - '@Yosimitso\WorkingForumBundle\Service\FileUploaderService'
       - '@Yosimitso\WorkingForumBundle\Twig\Extension\SmileyTwigExtension'
       - '@Yosimitso\WorkingForumBundle\Service\ThreadService'
+      - '@security.csrf.token_manager'
 
   Yosimitso\WorkingForumBundle\Controller\Admin\AdminController:
     parent: Yosimitso\WorkingForumBundle\Controller\BaseController

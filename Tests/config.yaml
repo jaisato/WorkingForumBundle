@@ -45,6 +45,7 @@ doctrine:
 
 framework:
   test: ~
+  csrf_protection: true
   validation: { enable_annotations: true }
   secret: '%env(APP_SECRET)%'
   session:

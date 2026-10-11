@@ -5,6 +5,8 @@ namespace Yosimitso\WorkingForumBundle\Controller;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Yosimitso\WorkingForumBundle\Entity\Forum;
 use Yosimitso\WorkingForumBundle\Entity\Post;
 use Yosimitso\WorkingForumBundle\Entity\PostReport;
@@ -31,6 +33,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 class ThreadController extends BaseController
 {
     /**
+     * CSRF token id of the moderation links (lock, pin, unpin, delete, resolve).
+     * Templates generate it with csrf_token('workingforum_thread_action').
+     */
+    public const THREAD_ACTION_TOKEN_ID = 'workingforum_thread_action';
+
+    /**
      * @var FileUploaderService
      */
     protected $fileUploaderService;
@@ -43,11 +51,21 @@ class ThreadController extends BaseController
      */
     protected $threadService;
     
-    public function __construct(FileUploaderService $fileUploaderService, SmileyTwigExtension $smileyTwigExtension, ThreadService $threadService)
-    {
+    /**
+     * @var CsrfTokenManagerInterface|null
+     */
+    protected $csrfTokenManager;
+
+    public function __construct(
+        FileUploaderService $fileUploaderService,
+        SmileyTwigExtension $smileyTwigExtension,
+        ThreadService $threadService,
+        ?CsrfTokenManagerInterface $csrfTokenManager = null
+    ) {
         $this->fileUploaderService = $fileUploaderService;
         $this->smileyTwigExtension = $smileyTwigExtension;
         $this->threadService = $threadService;
+        $this->csrfTokenManager = $csrfTokenManager;
     }
 
     /**
@@ -240,12 +258,14 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
         if (!$this->authorizationGuard->hasModeratorAuthorization() && ($this->isUserAnonymous() || $this->user->getId() != $thread->getAuthor()->getId())) // ONLY ADMIN MODERATOR OR THE THREAD'S AUTHOR CAN SET A THREAD AS RESOLVED
         {
             throw new AccessDeniedHttpException('You are not authorized to do this');
         }
+
+        $this->assertThreadActionToken($request);
 
         $this->threadService->resolve($thread);
 
@@ -264,8 +284,10 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadActionToken($request);
+
         if ($thread->getPin()) {
             throw new \Exception("Thread already pinned", 500);
         }
@@ -287,8 +309,10 @@ class ThreadController extends BaseController
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadActionToken($request);
+
         if (!$thread->getPin()) {
             throw new \Exception("Thread not pinned", 500);
         }
@@ -340,9 +364,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/deletethread/{thread}", name="workingforum_delete_thread")
      * @return RedirectResponse
      */
-    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
         $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertThreadActionToken($request);
 
         if (!$this->bundleParameters->allow_moderator_delete_thread) {
             throw new Exception('Thread deletion is not allowed');
@@ -363,8 +388,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/{thread}/lock", name="workingforum_lock_thread")
      * @return RedirectResponse
      */
-    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadActionToken($request);
+
         $this->threadService->lock($thread);
         $this->flashbag->add(
             'success',
@@ -419,6 +446,37 @@ class ThreadController extends BaseController
             return new Response(null, 500);
         }
 
+    }
+
+    /**
+     * Lock, pin, unpin, delete and resolve are plain GET links, so without a
+     * token any page could trigger them for a moderator who opens it - and the
+     * easiest such page is the forum itself: posts are markdown, markdown
+     * images are allowed, and an image's src is fetched with the reader's
+     * cookies. `![](/my-forum/my-subforum/some-thread/lock)` (or
+     * /deletethread/...) in a post locked or deleted the thread as soon as a
+     * moderator scrolled past it. The links the templates render now carry a
+     * CSRF token, checked here before anything changes.
+     */
+    private function assertThreadActionToken(Request $request): void
+    {
+        $token = $request->query->get('_token');
+
+        if (!is_string($token) || $token === '') {
+            throw new AccessDeniedHttpException('Invalid CSRF token');
+        }
+
+        // Injected explicitly: the controller is given the whole service
+        // container rather than a service locator, and the token manager is
+        // not necessarily public there. Without it, fall back to
+        // AbstractController, which fails closed when CSRF is not enabled.
+        $valid = is_null($this->csrfTokenManager)
+            ? $this->isCsrfTokenValid(self::THREAD_ACTION_TOKEN_ID, $token)
+            : $this->csrfTokenManager->isTokenValid(new CsrfToken(self::THREAD_ACTION_TOKEN_ID, $token));
+
+        if (!$valid) {
+            throw new AccessDeniedHttpException('Invalid CSRF token');
+        }
     }
 
     /**
