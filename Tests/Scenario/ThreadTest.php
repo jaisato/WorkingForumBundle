@@ -77,7 +77,7 @@ class ThreadTest extends WebTestCase
 
         $this->assertEquals(1, $crawler->filter('.wf_sub_name > a')->count());
         $link = $crawler->filter('.wf_sub_name > a')->first()->link();
-        $crawler = $client->click($link);
+        $crawler = $client->submit($form);
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
@@ -123,7 +123,7 @@ class ThreadTest extends WebTestCase
 
         $this->assertEquals(1, $crawler->filter('.wf_sub_name > a')->count());
         $link = $crawler->filter('.wf_sub_name > a')->first()->link();
-        $crawler = $client->click($link);
+        $crawler = $client->submit($form);
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
@@ -141,8 +141,8 @@ class ThreadTest extends WebTestCase
         $client->followRedirects();
         
         $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/view');
-        $link = $crawler->filter('#wf_set-resolved')->first()->link();
-        $crawler = $client->click($link);
+        $form = $crawler->filter('#wf_set-resolved')->first()->form(); // A POST FORM WITH ITS TOKEN, NO LONGER A LINK
+        $crawler = $client->submit($form);
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
         $this->assertEquals('The thread is now solved, thanks for your feedback', $crawler->filter('.alert-success ul > li')->html());
@@ -171,8 +171,8 @@ class ThreadTest extends WebTestCase
 
         $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/view');
 
-        $link = $crawler->filter('#wf_set-locked')->first()->link();
-        $crawler = $client->click($link);
+        $form = $crawler->filter('#wf_set-locked')->first()->form(); // A POST FORM WITH ITS TOKEN, NO LONGER A LINK
+        $crawler = $client->submit($form);
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
         $this->assertEquals('The thread has been successfully locked', $crawler->filter('.alert-success ul > li')->html());
@@ -186,8 +186,8 @@ class ThreadTest extends WebTestCase
 
         $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/view');
 
-        $link = $crawler->filter('#wf_set-locked')->first()->link();
-        $crawler = $client->click($link);
+        $form = $crawler->filter('#wf_set-locked')->first()->form(); // A POST FORM WITH ITS TOKEN, NO LONGER A LINK
+        $crawler = $client->submit($form);
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
         $this->assertEquals('The thread has been successfully locked', $crawler->filter('.alert-success ul > li')->html());
@@ -201,7 +201,7 @@ class ThreadTest extends WebTestCase
         $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/view'); // SHOULDN'T SEE THE BUTTON
         $this->assertEquals(0, $crawler->filter('#wf_set-locked')->count());
         
-        $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/lock');
+        $crawler = $client->request('POST', '/my-forum/my-first-forum/a-thread-from-fixtures/lock');
         $this->assertEquals(403, $client->getResponse()->getStatusCode());
     }
 
@@ -213,7 +213,7 @@ class ThreadTest extends WebTestCase
         $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/view'); // SHOULDN'T SEE THE BUTTON
         $this->assertEquals(0, $crawler->filter('#wf_set-locked')->count());
 
-        $crawler = $client->request('GET', '/my-forum/my-first-forum/a-thread-from-fixtures/lock');
+        $crawler = $client->request('POST', '/my-forum/my-first-forum/a-thread-from-fixtures/lock');
         $this->assertEquals(401, $client->getResponse()->getStatusCode());
     }
 }

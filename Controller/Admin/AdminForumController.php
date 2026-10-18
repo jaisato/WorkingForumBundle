@@ -116,8 +116,12 @@ class AdminForumController extends BaseController
      *
      * @return Response
      */
-    public function deleteForumAction($forum_id)
+    public function deleteForumAction(Request $request, $forum_id)
     {
+        // POST plus token: as a GET link, a markdown image in any post was
+        // enough to delete a whole forum from an admin's browser.
+        $this->assertActionTokenValid($request);
+
         $forum = $this->em->getRepository(Forum::class)->findOneById($forum_id);
 
         if (!is_null($forum)) {
@@ -125,10 +129,14 @@ class AdminForumController extends BaseController
             $this->em->flush();
             $this->flashbag->add(
                 'success',
-                $this->get('translator')->trans('admin.forumDeleted', [], 'YosimitsoWorkingForumBundle')
+                $this->translator->trans('admin.forumDeleted', [], 'YosimitsoWorkingForumBundle')
             );
         }
 
-        return $this->forward('@YosimitsoWorkingForum/Admin/index', []);
+        // The forum was already gone by the time this ran: get('translator')
+        // is not one of AbstractController's services and the forward target
+        // was a template path, not a controller, so the admin got an error
+        // page for a deletion that had succeeded.
+        return $this->redirect($this->generateUrl('workingforum_admin'));
     }
 }
