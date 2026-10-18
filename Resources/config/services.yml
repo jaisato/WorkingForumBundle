@@ -9,6 +9,7 @@ services:
     calls:
       - ['setParameters',['@doctrine.orm.entity_manager','@Yosimitso\WorkingForumBundle\Security\AuthorizationGuard','@=service("security.token_storage").getToken()','@session', '@translator', '@knp_paginator', '@Yosimitso\WorkingForumBundle\Service\BundleParametersService']]
       - { method: setContainer, arguments: [ '@service_container' ] }
+      - ['setCsrfTokenManager', ['@?security.csrf.token_manager']]
 
 
   Yosimitso\WorkingForumBundle\Controller\ForumController:
@@ -85,6 +86,11 @@ services:
     tags:
       - { name: twig.extension }
     arguments: ['@request_stack', '@assets.packages']
+
+  Yosimitso\WorkingForumBundle\Twig\Extension\CsrfTwigExtension:
+    tags:
+      - { name: twig.extension }
+    arguments: ['@?security.csrf.token_manager']
 
   Yosimitso\WorkingForumBundle\Twig\Extension\SafeUrlTwigExtension:
     tags:

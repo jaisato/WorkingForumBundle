@@ -1,13 +1,19 @@
 {% trans_default_domain 'YosimitsoWorkingForumBundle' %}
+{#
+    Every action here changes state, so each one is a POST form carrying a
+    token, not a link: a GET link could be fired by a markdown image in any
+    post, with the cookies of the moderator reading it.
+#}
+{% set routeParameters = {'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug} %}
 <ul class="wf_action_list">
     {% if not thread.locked %}
         <li>
-            <a class="wf_button wf_icon-lock"
-               rel="nofollow"
-               id="wf_set-locked"
-               href="{{ path('workingforum_lock_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
-                {{ 'forum.lock' | trans }}
-            </a>
+            <form method="post" action="{{ path('workingforum_lock_thread', routeParameters) }}" style="display:inline">
+                <input type="hidden" name="_token" value="{{ workingforum_csrf_token() }}" />
+                <button type="submit" class="wf_button wf_icon-lock" id="wf_set-locked">
+                    {{ 'forum.lock' | trans }}
+                </button>
+            </form>
         </li>
     {% endif %}
     {% if moveThread %}
@@ -18,29 +24,21 @@
     {% endif %}
     {% if allowModeratorDeleteThread %}
         <li>
-            <a class="wf_button wf_icon-remove"
-               rel="nofollow"
-               onclick="if (!confirm('{{ 'forum.confirm_delete_thread' | trans }}')) { return false; }"
-               href="{{ path('workingforum_delete_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread': thread.slug}) }}">
-                {{ 'forum.delete_thread' | trans }}
-            </a>
+            <form method="post" action="{{ path('workingforum_delete_thread', routeParameters) }}" style="display:inline"
+                  onsubmit="return confirm('{{ 'forum.confirm_delete_thread' | trans | e('js') }}');">
+                <input type="hidden" name="_token" value="{{ workingforum_csrf_token() }}" />
+                <button type="submit" class="wf_button wf_icon-remove">
+                    {{ 'forum.delete_thread' | trans }}
+                </button>
+            </form>
         </li>
     {% endif %}
-    {% if not thread.pin %}
     <li>
-        <a class="wf_button wf_icon-pin"
-           rel="nofollow"
-           href="{{ path('workingforum_pin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
-            {{ 'forum.pin_thread' | trans }}
-        </a>
+        <form method="post" action="{{ path(thread.pin ? 'workingforum_unpin_thread' : 'workingforum_pin_thread', routeParameters) }}" style="display:inline">
+            <input type="hidden" name="_token" value="{{ workingforum_csrf_token() }}" />
+            <button type="submit" class="wf_button wf_icon-pin">
+                {{ (thread.pin ? 'forum.unpin_thread' : 'forum.pin_thread') | trans }}
+            </button>
+        </form>
     </li>
-        {% else %}
-            <li>
-                <a class="wf_button wf_icon-pin"
-                   rel="nofollow"
-                   href="{{ path('workingforum_unpin_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
-                    {{ 'forum.unpin_thread' | trans }}
-                </a>
-            </li>
-    {% endif %}
 </ul>

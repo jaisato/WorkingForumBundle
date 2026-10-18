@@ -21,11 +21,10 @@
         {% include '@YosimitsoWorkingForum/Common/breadcrumb.html.twig' with {'subforum': subforum, 'thread': thread} only %}
 
     {% if not thread.resolved and actionsAvailables.setResolved %}
-        <p><a class="wf_button"
-              rel="nofollow"
-              id="wf_set-resolved"
-              href="{{ path('workingforum_resolve_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">{{ 'forum.now_resolved' | trans }}</a>
-        </p>
+        <form method="post" action="{{ path('workingforum_resolve_thread',{'forum': forum.slug, 'subforum' : subforum.slug, 'thread' : thread.slug}) }}">
+            <input type="hidden" name="_token" value="{{ workingforum_csrf_token() }}" />
+            <p><button type="submit" class="wf_button" id="wf_set-resolved">{{ 'forum.now_resolved' | trans }}</button></p>
+        </form>
     {% endif %}
 
         {% include '@YosimitsoWorkingForum/Thread/storeJs.html.twig' %}

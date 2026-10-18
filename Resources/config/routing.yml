@@ -19,6 +19,7 @@ workingforum_admin_forum_add:
 workingforum_admin_delete_forum:
     path: /admin/forum/delete/{forum_id}
     defaults: {_controller: Yosimitso\WorkingForumBundle\Controller\Admin\AdminForumController:deleteForumAction }
+    methods: [POST]
     requirements:
         forum_id: '\d+'
 

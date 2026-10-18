@@ -236,12 +236,15 @@ class ThreadController extends BaseController
 
     /**
      * The thread is resolved
-     * @Route("{forum}/{subforum}/{thread}/resolved", name="workingforum_resolve_thread")
+     * @Route("{forum}/{subforum}/{thread}/resolved", name="workingforum_resolve_thread", methods={"POST"})
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function resolveAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertActionTokenValid($request);
+
         if (!$this->authorizationGuard->hasModeratorAuthorization() && ($this->isUserAnonymous() || $this->user->getId() != $thread->getAuthor()->getId())) // ONLY ADMIN MODERATOR OR THE THREAD'S AUTHOR CAN SET A THREAD AS RESOLVED
         {
             throw new AccessDeniedHttpException('You are not authorized to do this');
@@ -260,12 +263,15 @@ class ThreadController extends BaseController
     /**
      * A moderator pin a thread
      * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')")
-     * @Route("{forum}/{subforum}/{thread}/pin", name="workingforum_pin_thread")
+     * @Route("{forum}/{subforum}/{thread}/pin", name="workingforum_pin_thread", methods={"POST"})
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function pinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertActionTokenValid($request);
+
         if ($thread->getPin()) {
             throw new \Exception("Thread already pinned", 500);
         }
@@ -283,12 +289,15 @@ class ThreadController extends BaseController
     /**
      * A moderator unpin a thread
      * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')")
-     * @Route("{forum}/{subforum}/{thread}/unpin", name="workingforum_unpin_thread")
+     * @Route("{forum}/{subforum}/{thread}/unpin", name="workingforum_unpin_thread", methods={"POST"})
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function unpinAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertActionTokenValid($request);
+
         if (!$thread->getPin()) {
             throw new \Exception("Thread not pinned", 500);
         }
@@ -337,12 +346,13 @@ class ThreadController extends BaseController
     /**
      * The thread is deleted by modo or admin
      * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')")
-     * @Route("{forum}/{subforum}/deletethread/{thread}", name="workingforum_delete_thread")
+     * @Route("{forum}/{subforum}/deletethread/{thread}", name="workingforum_delete_thread", methods={"POST"})
      * @return RedirectResponse
      */
-    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function deleteThreadAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
         $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertActionTokenValid($request);
 
         if (!$this->bundleParameters->allow_moderator_delete_thread) {
             throw new Exception('Thread deletion is not allowed');
@@ -360,11 +370,14 @@ class ThreadController extends BaseController
     /**
      * The thread is locked by a moderator or admin
      * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')")
-     * @Route("{forum}/{subforum}/{thread}/lock", name="workingforum_lock_thread")
+     * @Route("{forum}/{subforum}/{thread}/lock", name="workingforum_lock_thread", methods={"POST"})
      * @return RedirectResponse
      */
-    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread)
+    public function lockAction(Forum $forum, Subforum $subforum, Thread $thread, Request $request)
     {
+        $this->assertThreadInSubforum($thread, $subforum);
+        $this->assertActionTokenValid($request);
+
         $this->threadService->lock($thread);
         $this->flashbag->add(
             'success',

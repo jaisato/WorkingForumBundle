@@ -79,7 +79,10 @@
    <p>{{ 'forum.nbPost' |trans | capitalize }} : {{ statistics.nbPost }}</p>
    <p>{{ 'forum.averagePostThread' |trans }} : {{ statistics.averagePostThread | round(2) }}
         <p>
-   <a href="{{ path('workingforum_admin_delete_forum', {forum_id: forum.id}) }}" onclick="if (!confirm('{{'admin.confirmDeleteForum'|trans}}')) { return false; }" class="wf_button wf_button-red">{{ 'admin.delete_forum' |trans}}</a>
+   <form method="post" action="{{ path('workingforum_admin_delete_forum', {forum_id: forum.id}) }}" style="display:inline" onsubmit="return confirm('{{'admin.confirmDeleteForum'|trans|e('js')}}');">
+       <input type="hidden" name="_token" value="{{ workingforum_csrf_token() }}" />
+       <button type="submit" class="wf_button wf_button-red">{{ 'admin.delete_forum' |trans}}</button>
+   </form>
    </p>
 </div>
 {% endif %}
