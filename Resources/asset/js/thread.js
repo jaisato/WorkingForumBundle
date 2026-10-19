@@ -88,8 +88,11 @@ jQuery(document).ready(() => {
                 async: false,
                 success: (result) => {
                     if (result === 'ok') {
-                        const msg = `<p class="wf_moderate">${storeJs.trans['forum.post_moderated']} ${reason}</p>`;
-                        jQuery('#wf_post\\[' + id+'\\] .wf_post_content').html(msg);
+                        // The reason is text, not markup: with .html() a "<" in it
+                        // was parsed, and script in it ran in the moderator's session.
+                        const msg = jQuery('<p class="wf_moderate"></p>')
+                            .text(`${storeJs.trans['forum.post_moderated']} ${reason}`);
+                        jQuery('#wf_post\\[' + id+'\\] .wf_post_content').empty().append(msg);
                     }
                 }
             });

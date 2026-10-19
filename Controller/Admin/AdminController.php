@@ -106,9 +106,14 @@ class AdminController extends BaseController
                 }
 
 
-                $html['input'] = '<input type="'.$setting['type'].'" value="'.$setting['value'].'"';
+                // The settings form is built by hand, outside Twig's autoescaping:
+                // a value holding a quote closed the attribute and the rest
+                // became markup in the admin page.
+                $html['input'] = '<input type="'.htmlspecialchars((string) $setting['type'], ENT_QUOTES, 'UTF-8')
+                    .'" value="'.htmlspecialchars((string) $setting['value'], ENT_QUOTES, 'UTF-8').'"';
                 foreach ($setting['attr'] as $indexAttr => $attr) {
-                    $html['input'] .= ' '.$indexAttr.'="'.$attr.'"';
+                    $html['input'] .= ' '.htmlspecialchars((string) $indexAttr, ENT_QUOTES, 'UTF-8')
+                        .'="'.htmlspecialchars((string) $attr, ENT_QUOTES, 'UTF-8').'"';
                 }
 
                 $html['input'] .= '/>';
