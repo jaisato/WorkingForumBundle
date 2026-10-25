@@ -317,7 +317,7 @@ class ThreadController extends BaseController
 
     /**
      * A user report a post
-     * @Route("{forum}/{subforum}/report/{post}", name="workingforum_report_post", requirements={"post_id":"\d+"})
+     * @Route("{forum}/{subforum}/report/{post}", name="workingforum_report_post", requirements={"post_id":"\d+"}, methods={"POST"})
      * @return Response
      * @throws \Exception
      */
@@ -326,6 +326,8 @@ class ThreadController extends BaseController
         if (is_null($this->user)) {
             throw new AccessDeniedHttpException("access denied");
         }
+
+        $this->assertPostReadable($post);
 
         $check_already = $this->em->getRepository(PostReport::class)
             ->findOneBy(['user' => $this->user->getId(), 'post' => $post->getId()]);
@@ -413,7 +415,7 @@ class ThreadController extends BaseController
     }
 
     /**
-     * @Route("{forum}/{subforum}/cancelsubscription/{thread}", name="workingforum_cancel_subscription")
+     * @Route("{forum}/{subforum}/cancelsubscription/{thread}", name="workingforum_cancel_subscription", methods={"POST"})
      * @return Response
      */
     public function cancelSubscriptionAction(Thread $thread)
@@ -449,14 +451,34 @@ class ThreadController extends BaseController
     }
 
     /**
+     * Reporting a post, like subscribing, used to skip the subforum check
+     * every page of the thread makes.
+     */
+    private function assertPostReadable(Post $post): void
+    {
+        $thread = $post->getThread();
+        if (is_null($thread) || is_null($thread->getSubforum())
+            || !$this->authorizationGuard->hasSubforumAccess($thread->getSubforum())) {
+            throw new AccessDeniedHttpException('access denied');
+        }
+    }
+
+    /**
      * An user wants to subscribe to a thread
-     * @Route("{forum}/{subforum}/addsubscription/{thread}", name="workingforum_add_subscription")
+     * @Route("{forum}/{subforum}/addsubscription/{thread}", name="workingforum_add_subscription", methods={"POST"})
      * @return Response
      */
     public function addSubscriptionAction(Thread $thread)
     {
         if (is_null($this->user)) {
             return new Response(null, 500);
+        }
+
+        // A subscription mails every new post of the thread in full, so it is
+        // as good as reading it: a thread of a subforum restricted to some
+        // roles could be followed by anyone who guessed its id.
+        if (is_null($thread->getSubforum()) || !$this->authorizationGuard->hasSubforumAccess($thread->getSubforum())) {
+            throw new AccessDeniedHttpException('access denied');
         }
 
         $checkSubscription = $this->em->getRepository(Subscription::class)->findOneBy(['user' => $this->user, 'thread' => $thread]);

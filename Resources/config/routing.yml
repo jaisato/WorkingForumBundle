@@ -52,10 +52,12 @@ workingforum_admin_report_history:
 workingforum_admin_report_action_moderate:
     path: /admin/reportaction/moderate
     defaults: {_controller: Yosimitso\WorkingForumBundle\Controller\Admin\AdminReportController:reportActionModerateAction }
+    methods: [POST]
 
 workingforum_admin_report_action_good:
     path: /admin/reportaction/good
     defaults: {_controller: Yosimitso\WorkingForumBundle\Controller\Admin\AdminReportController:reportActionGoodAction }
+    methods: [POST]
 
 workingforum_admin_user:
     path: /admin/users
@@ -68,3 +70,4 @@ workingforum_search:
 workingforum_vote_up:
     path: /voteup
     defaults: { _controller: Yosimitso\WorkingForumBundle\Controller\PostController:voteUpAction }
+    methods: [POST]

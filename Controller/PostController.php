@@ -30,7 +30,11 @@ class PostController extends BaseController
      */
     public function voteUpAction(Request $request)
     {
-        $postId = $request->get('postId');
+        // Only from the POST body, and the route only accepts POST: with
+        // $request->get() a markdown image in any post - ![](/forum/voteup?postId=42)
+        // - cast a vote for post 42 with the session of every member who
+        // opened the page.
+        $postId = $request->request->get('postId');
 
         if ($this->isUserAnonymous()) {
             return new JsonResponse(['res' => 'false', 'errMsg' => 'You must be a registered user'], 403);
