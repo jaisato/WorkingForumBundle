@@ -56,7 +56,7 @@ jQuery(document).ready(() => {
             return false;
         }
         jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: url,
             crossDomain: false,
             dataType: 'json',
@@ -144,7 +144,7 @@ jQuery(document).ready(() => {
      */
     addSubscription = () => {
         jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: storeJs.routes.workingforum_add_subscription,
             crossDomain: false,
             dataType: 'json',
@@ -164,7 +164,7 @@ jQuery(document).ready(() => {
      */
     cancelSubscription = () => {
         jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: storeJs.routes.workingforum_cancel_subscription,
             crossDomain: false,
             dataType: 'json',

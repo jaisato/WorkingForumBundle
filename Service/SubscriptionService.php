@@ -71,7 +71,11 @@ class SubscriptionService
                             ->html(
                                 $this->templating->render(
                                     '@YosimitsoWorkingForum/Email/notification_new_message_en.html.twig',
-                                    $emailTranslation
+                                    // "Hello {{ user.username }}" greets the
+                                    // recipient: 'user' used to be the post's
+                                    // author, so every subscriber was greeted
+                                    // with the name of whoever had just posted.
+                                    ['user' => $notif->getUser()] + $emailTranslation
                                 ));
 
                         $this->mailer->send($email);
