@@ -66,9 +66,7 @@ class ThreadRepository extends EntityRepository
             return null;
         }
 
-        $keywords = array_values(array_filter(array_map('trim', $keywords), static function ($keyword) {
-            return $keyword !== '';
-        }));
+        $keywords = self::normaliseKeywords($keywords);
 
         if (empty($keywords)) {
             return null;
@@ -128,6 +126,8 @@ class ThreadRepository extends EntityRepository
             // above.
             ->andWhere($expr->in('subforum.id', ':subforums'))
             ->setParameter('subforums', $whereSubforum)
+            // $start was accepted and ignored: every call began at the first row.
+            ->setFirstResult(max(0, $start))
             ->setMaxResults($limit)
         ;
 
@@ -136,6 +136,53 @@ class ThreadRepository extends EntityRepository
         }
 
         return $queryBuilder->getQuery()->getScalarResult();
+    }
+
+    /**
+     * The most comma-separated terms one search turns into LIKE conditions.
+     */
+    public const MAX_KEYWORDS = 10;
+
+    /**
+     * The search terms as they reach the query: trimmed, without empty or
+     * repeated entries (compared case-insensitively, as LIKE does on the usual
+     * collations), and at most MAX_KEYWORDS of them.
+     *
+     * Every term adds three `LIKE '%term%'` conditions, none of which an index
+     * can serve, and one of them over post.content. The list came straight from
+     * explode(',') on the form field, so a single GET of "aaa,aaa,aaa,..." built
+     * a query with thousands of full scans and as many bound parameters - past
+     * SQLite's limit, a 500; on MySQL, minutes of database time per request,
+     * from an anonymous visitor where the forum allows them.
+     *
+     * @param array<mixed> $keywords
+     *
+     * @return list<string>
+     */
+    public static function normaliseKeywords(array $keywords) : array
+    {
+        $normalised = [];
+
+        foreach ($keywords as $keyword) {
+            if (!is_scalar($keyword)) {
+                continue;
+            }
+
+            $keyword = trim((string) $keyword);
+            $key = mb_strtolower($keyword);
+
+            if ($keyword === '' || isset($normalised[$key])) {
+                continue;
+            }
+
+            $normalised[$key] = $keyword;
+
+            if (count($normalised) === self::MAX_KEYWORDS) {
+                break;
+            }
+        }
+
+        return array_values($normalised);
     }
 
     /**

@@ -31,7 +31,10 @@ class SearchType extends AbstractType
                     'translation_domain' => 'YosimitsoWorkingForumBundle',
                     'label'              => 'search.keywords',
                     'required' => true,
-                    'constraints' => [new Length(['min' => 3])],
+                    // The upper bound keeps one request from carrying an arbitrarily
+                    // long pattern into every LIKE of the search query.
+                    'constraints' => [new Length(['min' => 3, 'max' => 255])],
+                    'attr' => ['maxlength' => 255],
                 ]
             )
             ->add(
