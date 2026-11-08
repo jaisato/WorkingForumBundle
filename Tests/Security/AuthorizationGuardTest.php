@@ -3,6 +3,7 @@
 namespace Yosimitso\WorkingForumBundle\Tests\Security;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -49,117 +50,75 @@ class AuthorizationGuardTest extends TestCase
 
     private function getMockClassicUser($banned = false)
     {
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $user =  $this->getMockBuilder(User::class)
-                    ->onlyMethods(['isBanned'])
-                    ->addMethods(['getRoles'])
-                    ->getMock();
-
-        $user->method('getRoles')->willReturn(['ROLE_USER']);
-        $user->method('isBanned')->willReturn($banned);
-
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $class = new class($user)
-        {
-            private $user;
-            public function __construct($user)
-            {
-                $this->user = $user;
-            }
-
-            function getUser()
-            {
-                return $this->user;
-            }
-        };
-
-        $tokenStorage->method('getToken')->willReturn($class);
-
-        return $tokenStorage;
+        return $this->tokenStorageFor(['ROLE_USER'], $banned);
     }
 
     private function getMockModeratorUser()
     {
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $user =  $this->getMockBuilder(User::class)
-            ->onlyMethods(['isBanned'])
-            ->addMethods(['getRoles'])
-            ->getMock();
-
-        $user->method('getRoles')->willReturn(['ROLE_MODERATOR']);
-        $user->method('isBanned')->willReturn(false);
-
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $class = new class($user)
-        {
-            private $user;
-            public function __construct($user)
-            {
-                $this->user = $user;
-            }
-
-            function getUser()
-            {
-                return $this->user;
-            }
-        };
-
-        $tokenStorage->method('getToken')->willReturn($class);
-
-        return $tokenStorage;
+        return $this->tokenStorageFor(['ROLE_MODERATOR'], false);
     }
 
     private function getMockAdminUser()
     {
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $user =  $this->getMockBuilder(User::class)
-            ->onlyMethods(['isBanned'])
-            ->addMethods(['getRoles'])
-            ->getMock();
-
-        $user->method('getRoles')->willReturn(['ROLE_ADMIN']);
-        $user->method('isBanned')->willReturn(false);
-
-        $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $class = new class($user)
-        {
-            private $user;
-            public function __construct($user)
-            {
-                $this->user = $user;
-            }
-
-            function getUser()
-            {
-                return $this->user;
-            }
-        };
-
-        $tokenStorage->method('getToken')->willReturn($class);
-
-        return $tokenStorage;
+        return $this->tokenStorageFor(['ROLE_ADMIN'], false);
     }
-
 
     private function getMockAnonymousUser()
     {
+        return $this->tokenStorageFor(null);
+    }
+
+    /**
+     * A token storage as the firewall leaves it: getToken() returns a real
+     * TokenInterface double (the test double refuses anything else now that
+     * it checks declared return types), whose user is the application's
+     * security user - a Symfony UserInterface carrying the roles, which hands
+     * the forum User over through user() (see AuthorizationGuard) - or null
+     * for an anonymous visitor.
+     *
+     * @param list<string>|null $roles null for an anonymous visitor
+     */
+    private function tokenStorageFor(?array $roles, bool $banned = false): TokenStorage
+    {
+        $securityUser = null;
+
+        if ($roles !== null) {
+            $user = $this->getMockBuilder(User::class)
+                ->onlyMethods(['isBanned'])
+                ->getMock();
+            $user->method('isBanned')->willReturn($banned);
+
+            $securityUser = new class($user, $roles) implements UserInterface {
+                public function __construct(private $user, private array $roles)
+                {
+                }
+
+                public function user()
+                {
+                    return $this->user;
+                }
+
+                public function getRoles(): array
+                {
+                    return $this->roles;
+                }
+
+                public function eraseCredentials(): void
+                {
+                }
+
+                public function getUserIdentifier(): string
+                {
+                    return 'toto';
+                }
+            };
+        }
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($securityUser);
+
         $tokenStorage = $this->createMock(TokenStorage::class);
-
-        $class = new class()
-        {
-            function getUser()
-            {
-                return null;
-            }
-        };
-
-        $tokenStorage->method('getToken')->willReturn($class);
+        $tokenStorage->method('getToken')->willReturn($token);
 
         return $tokenStorage;
     }

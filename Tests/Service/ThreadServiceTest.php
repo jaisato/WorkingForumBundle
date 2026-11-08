@@ -5,6 +5,7 @@ namespace Yosimitso\WorkingForumBundle\Tests\Service;
 use Knp\Component\Pager\PaginatorInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Form;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -26,6 +27,8 @@ use Yosimitso\MockDoctrineManager\EntityManagerMock;
 use Yosimitso\WorkingForumBundle\Service\FileUploaderService;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\User\UserInterface as SymfonyUserInterface;
 
 class ThreadServiceTest extends TestCase
 {
@@ -36,23 +39,44 @@ class ThreadServiceTest extends TestCase
             $user = $this->createMock(User::class);
             $user->setUsername = 'toto';
         }
-            $tokenStorage = $this->createMock(TokenStorageInterface::class);
-        
-            $class = new class($user)
+        $tokenStorage = $this->createMock(TokenStorageInterface::class);
+
+        // getToken() is declared to return ?TokenInterface, and the token's
+        // user is a Symfony UserInterface: the application's security user,
+        // which hands the forum User over through user() (see the
+        // constructor of ThreadService). The previous stand-in returned the
+        // forum User straight from a bare object; the test double refuses it
+        // now that it checks declared return types (PHPUnit 9), and it never
+        // went through user() anyway.
+        $securityUser = new class($user) implements SymfonyUserInterface {
+            public function __construct(private $user)
             {
-                private $user;
-                public function __construct($user)
-                {
-                    $this->user = $user;
-                }
+            }
 
-                function getUser()
-                {
-                    return $this->user;
-                }
-            };
+            public function user()
+            {
+                return $this->user;
+            }
 
-        $tokenStorage->method('getToken')->willReturn($class);
+            public function getRoles(): array
+            {
+                return [];
+            }
+
+            public function eraseCredentials(): void
+            {
+            }
+
+            public function getUserIdentifier(): string
+            {
+                return 'toto';
+            }
+        };
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($securityUser);
+
+        $tokenStorage->method('getToken')->willReturn($token);
 
         if (is_null($authorization)) {
             $authorization = $this->createMock(AuthorizationGuard::class);
@@ -96,23 +120,11 @@ class ThreadServiceTest extends TestCase
     private function getFormFactory()
     {
         $formFactory = $this->createMock(FormFactory::class);
-        $formView = $this->createMock(FormView::class);
-        $classFormFactory = new class($formView)
-        {
-            private $formView;
-            
-            public function __construct($formView)
-            {
-                $this->formView = $formView;
-            }
-
-            function createView()
-            {
-
-                return $this->formView;
-            }
-        };
-        $formFactory->method('create')->willReturn($classFormFactory);
+        // create() is declared to return a FormInterface; a bare object with
+        // createView() is refused by the test double (PHPUnit 9 checks it).
+        $form = $this->createMock(FormInterface::class);
+        $form->method('createView')->willReturn($this->createMock(FormView::class));
+        $formFactory->method('create')->willReturn($form);
 
         return $formFactory;
     }

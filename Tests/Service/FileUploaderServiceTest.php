@@ -32,8 +32,8 @@ class FileUploaderServiceTest extends WebTestCase
             ->setMethods(['persist', 'flush'])
             ->getMock();
 
-        $em->method('persist')->willReturn(true);
-        $em->method('flush')->willReturn(true);
+        // persist() and flush() return nothing: a stubbed `true` is refused by
+        // the test double now that it checks the declared return type.
         $this->em = $em;
 
         $this->translator = $this->getMockBuilder(Translator::class)
@@ -130,7 +130,8 @@ class FileUploaderServiceTest extends WebTestCase
 
         $file->method('getMimeType')->willReturn($mimeType);
         $file->method('getClientOriginalName')->willReturn($originalName);
-        $file->method('getError')->willReturn(false);
+        // getError() is declared to return an int, the UPLOAD_ERR_* code.
+        $file->method('getError')->willReturn(\UPLOAD_ERR_OK);
         $file->method('getSize')->willReturn($size);
         $file->method('move')->willReturn($movedFile);
 

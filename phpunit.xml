@@ -8,6 +8,7 @@
             <directory suffix="Test.php">./Tests/ParamConverter</directory>
             <directory suffix="Test.php">./Tests/Controller</directory>
             <directory suffix="Test.php">./Tests/Repository</directory>
+            <directory suffix="Test.php">./Tests/Security</directory>
         </testsuite>
         <testsuite name="scenario">
             <directory suffix="Test.php">./Tests/Scenario</directory>
