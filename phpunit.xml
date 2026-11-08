@@ -9,6 +9,7 @@
             <directory suffix="Test.php">./Tests/Controller</directory>
             <directory suffix="Test.php">./Tests/Repository</directory>
             <directory suffix="Test.php">./Tests/Security</directory>
+            <directory suffix="Test.php">./Tests/Twig</directory>
         </testsuite>
         <testsuite name="scenario">
             <directory suffix="Test.php">./Tests/Scenario</directory>
