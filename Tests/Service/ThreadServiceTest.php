@@ -48,30 +48,10 @@ class ThreadServiceTest extends TestCase
         // forum User straight from a bare object; the test double refuses it
         // now that it checks declared return types (PHPUnit 9), and it never
         // went through user() anyway.
-        $securityUser = new class($user) implements SymfonyUserInterface {
-            public function __construct(private $user)
-            {
-            }
-
-            public function user()
-            {
-                return $this->user;
-            }
-
-            public function getRoles(): array
-            {
-                return [];
-            }
-
-            public function eraseCredentials(): void
-            {
-            }
-
-            public function getUserIdentifier(): string
-            {
-                return 'toto';
-            }
-        };
+        $securityUser = $this->getMockBuilder(SymfonyUserInterface::class)
+            ->addMethods(['user'])
+            ->getMockForAbstractClass();
+        $securityUser->method('user')->willReturn($user);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($securityUser);

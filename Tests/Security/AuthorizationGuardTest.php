@@ -88,30 +88,13 @@ class AuthorizationGuardTest extends TestCase
                 ->getMock();
             $user->method('isBanned')->willReturn($banned);
 
-            $securityUser = new class($user, $roles) implements UserInterface {
-                public function __construct(private $user, private array $roles)
-                {
-                }
-
-                public function user()
-                {
-                    return $this->user;
-                }
-
-                public function getRoles(): array
-                {
-                    return $this->roles;
-                }
-
-                public function eraseCredentials(): void
-                {
-                }
-
-                public function getUserIdentifier(): string
-                {
-                    return 'toto';
-                }
-            };
+            // A double of the interface, so it fits whichever Symfony
+            // version is installed, plus the user() the guard reads.
+            $securityUser = $this->getMockBuilder(UserInterface::class)
+                ->addMethods(['user'])
+                ->getMockForAbstractClass();
+            $securityUser->method('user')->willReturn($user);
+            $securityUser->method('getRoles')->willReturn($roles);
         }
 
         $token = $this->createMock(TokenInterface::class);
