@@ -397,8 +397,15 @@ class ThreadController extends BaseController
      */
     public function moveThreadAction(Request $request)
     {
-        $threadId = $request->get('threadId');
-        $targetId = $request->get('target');
+        // A moderation action like lock or delete, called with
+        // jQuery.ajax() instead of a form: it checks the same token, which
+        // thread.js sends from storeJs.actionToken. Without it any site a
+        // moderator visited could move threads with their cookies. Both ids
+        // come from the POST body only, as the vote's do.
+        $this->assertActionTokenValid($request);
+
+        $threadId = $request->request->get('threadId');
+        $targetId = $request->request->get('target');
 
         $thread = $this->em->getRepository(Thread::class)->findOneById($threadId);
         $targetSubforum = $this->em->getRepository(Subforum::class)->findOneById($targetId);

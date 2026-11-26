@@ -15,7 +15,9 @@ function report(action, id, postId) {
             type: "POST",
             url: '{{ path('workingforum_admin_report_action_moderate') }}',
             crossDomain: false,
-            data: 'reason=' + reason + '&id=' + id + '&postId=' + postId + '&banuser=' + banuser,
+            // An object, so jQuery encodes the reason; _token is the action
+            // token the controller checks.
+            data: { reason: reason, id: id, postId: postId, banuser: banuser, _token: '{{ workingforum_csrf_token() }}' },
             dataType: 'json',
             async: false,
             success: function (res) {
@@ -31,7 +33,7 @@ function report(action, id, postId) {
             type: "POST",
             url: '{{ path('workingforum_admin_report_action_good') }}',
             crossDomain: false,
-            data: 'id=' + id + '&postId=' + postId,
+            data: { id: id, postId: postId, _token: '{{ workingforum_csrf_token() }}' },
             dataType: 'json',
             async: false,
             success: function (res) {
