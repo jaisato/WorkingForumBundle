@@ -63,6 +63,12 @@ class AdminReportController extends BaseController
      */
     public function reportActionGoodAction(Request $request)
     {
+        // The report page posts this and reportActionModerateAction() with
+        // jQuery.ajax(), not with a form, and neither checked the token the
+        // other moderation actions do: a page on any site could close reports,
+        // censor posts and ban their authors with a moderator's cookies.
+        $this->assertActionTokenValid($request);
+
         $id = (int)htmlentities($request->request->get('id'));
 
         if ($id) {
@@ -89,6 +95,8 @@ class AdminReportController extends BaseController
      */
     public function reportActionModerateAction(Request $request)
     {
+        $this->assertActionTokenValid($request);
+
         $reason = htmlentities($request->request->get('reason'));
         $id = (int)htmlentities($request->request->get('id'));
         $postId = (int)htmlentities($request->request->get('postId'));

@@ -66,7 +66,7 @@ class ReadAccessTest extends TestCase
         $em->expects($this->never())->method('persist');
 
         $this->expectException(AccessDeniedHttpException::class);
-        $this->threadController(false, $em)->addSubscriptionAction($this->thread());
+        $this->threadController(false, $em)->addSubscriptionAction(new Request(), $this->thread());
     }
 
     public function testSubscribingToAReadableThreadStillWorks()
@@ -78,7 +78,7 @@ class ReadAccessTest extends TestCase
         $em->method('getRepository')->willReturn($repository);
         $em->expects($this->once())->method('persist');
 
-        $response = $this->threadController(true, $em)->addSubscriptionAction($this->thread());
+        $response = $this->threadController(true, $em)->addSubscriptionAction(new Request(), $this->thread());
 
         $this->assertSame(200, $response->getStatusCode());
     }
@@ -92,7 +92,7 @@ class ReadAccessTest extends TestCase
         $post->setThread($this->thread());
 
         $this->expectException(AccessDeniedHttpException::class);
-        $this->threadController(false, $em)->reportAction($post);
+        $this->threadController(false, $em)->reportAction(new Request(), $post);
     }
 
     public function testAVoteIsNotReadFromTheQueryString()

@@ -321,8 +321,12 @@ class ThreadController extends BaseController
      * @return Response
      * @throws \Exception
      */
-    public function reportAction(Post $post)
+    public function reportAction(Request $request, Post $post)
     {
+        // POST-only stops a markdown image, not a form on another site: the
+        // token thread.js sends from storeJs.actionToken does.
+        $this->assertActionTokenValid($request);
+
         if (is_null($this->user)) {
             throw new AccessDeniedHttpException("access denied");
         }
@@ -397,8 +401,15 @@ class ThreadController extends BaseController
      */
     public function moveThreadAction(Request $request)
     {
-        $threadId = $request->get('threadId');
-        $targetId = $request->get('target');
+        // A moderation action like lock or delete, called with
+        // jQuery.ajax() instead of a form: it checks the same token, which
+        // thread.js sends from storeJs.actionToken. Without it any site a
+        // moderator visited could move threads with their cookies. Both ids
+        // come from the POST body only, as the vote's do.
+        $this->assertActionTokenValid($request);
+
+        $threadId = $request->request->get('threadId');
+        $targetId = $request->request->get('target');
 
         $thread = $this->em->getRepository(Thread::class)->findOneById($threadId);
         $targetSubforum = $this->em->getRepository(Subforum::class)->findOneById($targetId);
@@ -418,8 +429,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/cancelsubscription/{thread}", name="workingforum_cancel_subscription", methods={"POST"})
      * @return Response
      */
-    public function cancelSubscriptionAction(Thread $thread)
+    public function cancelSubscriptionAction(Request $request, Thread $thread)
     {
+        $this->assertActionTokenValid($request);
+
         if (is_null($this->user)) {
             return new Response(null, 500);
         }
@@ -468,8 +481,10 @@ class ThreadController extends BaseController
      * @Route("{forum}/{subforum}/addsubscription/{thread}", name="workingforum_add_subscription", methods={"POST"})
      * @return Response
      */
-    public function addSubscriptionAction(Thread $thread)
+    public function addSubscriptionAction(Request $request, Thread $thread)
     {
+        $this->assertActionTokenValid($request);
+
         if (is_null($this->user)) {
             return new Response(null, 500);
         }
