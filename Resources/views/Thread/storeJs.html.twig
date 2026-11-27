@@ -3,7 +3,7 @@
     var storeJs = {
         'assetPath': '{{ asset('bundles/yosimitsoworkingforum/') }}',
         'locale': '{{ request.locale }}',
-        {# The token of the moderation actions thread.js posts (move, moderate). #}
+        {# The token of every action thread.js posts (move, moderate, vote, report, subscriptions). #}
         'actionToken': '{{ workingforum_csrf_token() }}',
         'trans': {
             'forum.confirm_move_thread': '{{ 'forum.confirm_move_thread' | trans }}',

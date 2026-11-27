@@ -60,6 +60,7 @@ jQuery(document).ready(() => {
             type: 'POST',
             url: url,
             crossDomain: false,
+            data: { _token: storeJs.actionToken },
             dataType: 'json',
             async: false,
             success: (result) => {
@@ -115,7 +116,7 @@ jQuery(document).ready(() => {
             type: 'POST',
             url: storeJs.routes.workingforum_vote_up,
             crossDomain: false,
-            data: `postId=${id}`,
+            data: { postId: id, _token: storeJs.actionToken },
             dataType: 'json',
             async: false,
             success: (content) => {
@@ -150,6 +151,7 @@ jQuery(document).ready(() => {
             type: 'POST',
             url: storeJs.routes.workingforum_add_subscription,
             crossDomain: false,
+            data: { _token: storeJs.actionToken },
             dataType: 'json',
             async: false,
             success: () => {
@@ -170,6 +172,7 @@ jQuery(document).ready(() => {
             type: 'POST',
             url: storeJs.routes.workingforum_cancel_subscription,
             crossDomain: false,
+            data: { _token: storeJs.actionToken },
             dataType: 'json',
             async: false,
             success: () => {

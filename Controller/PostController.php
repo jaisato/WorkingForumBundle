@@ -33,7 +33,9 @@ class PostController extends BaseController
         // Only from the POST body, and the route only accepts POST: with
         // $request->get() a markdown image in any post - ![](/forum/voteup?postId=42)
         // - cast a vote for post 42 with the session of every member who
-        // opened the page.
+        // opened the page. A form on another site still could, hence the token.
+        $this->assertActionTokenValid($request);
+
         $postId = $request->request->get('postId');
 
         if ($this->isUserAnonymous()) {

@@ -11,7 +11,10 @@ use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface;
 use Yosimitso\WorkingForumBundle\Controller\Admin\AdminReportController;
 use Yosimitso\WorkingForumBundle\Controller\BaseController;
+use Yosimitso\WorkingForumBundle\Controller\PostController;
 use Yosimitso\WorkingForumBundle\Controller\ThreadController;
+use Yosimitso\WorkingForumBundle\Entity\Post;
+use Yosimitso\WorkingForumBundle\Entity\Thread;
 use Yosimitso\WorkingForumBundle\Service\FileUploaderService;
 use Yosimitso\WorkingForumBundle\Service\ThreadService;
 use Yosimitso\WorkingForumBundle\Twig\Extension\CsrfTwigExtension;
@@ -111,6 +114,58 @@ class AjaxActionTokenTest extends TestCase
         $this->expectException(AccessDeniedHttpException::class);
         $this->reportController($this->untouchedEntityManager(), $this->manager())
             ->reportActionGoodAction(new Request([], $body + ['id' => 1]));
+    }
+
+    /**
+     * Voting, reporting a post and (un)subscribing are POST-only, which keeps
+     * a markdown image away from them but not a form on another site.
+     *
+     * @dataProvider memberActions
+     */
+    public function testMemberActionsWithoutTheTokenAreRefused(string $action)
+    {
+        $em = $this->untouchedEntityManager();
+        $manager = $this->manager();
+        $request = new Request([], ['_token' => 'forged', 'postId' => 1]);
+
+        $this->expectException(AccessDeniedHttpException::class);
+        $this->expectExceptionMessage('Invalid CSRF token');
+
+        switch ($action) {
+            case 'vote':
+                $controller = new PostController($this->createMock(ThreadService::class));
+                $this->wire($controller, $em, $manager);
+                $controller->voteUpAction($request);
+                break;
+            case 'report':
+                $this->threadController($em, $manager)->reportAction($request, new Post());
+                break;
+            case 'subscribe':
+                $this->threadController($em, $manager)->addSubscriptionAction($request, new Thread());
+                break;
+            case 'unsubscribe':
+                $this->threadController($em, $manager)->cancelSubscriptionAction($request, new Thread());
+                break;
+        }
+    }
+
+    public function memberActions(): array
+    {
+        return ['vote' => ['vote'], 'report' => ['report'], 'subscribe' => ['subscribe'], 'unsubscribe' => ['unsubscribe']];
+    }
+
+    public function testVotingWithTheTokenTheTemplateRendersGoesThrough()
+    {
+        $manager = $this->manager();
+        $token = (new CsrfTwigExtension($manager))->getToken();
+        $controller = new PostController($this->createMock(ThreadService::class));
+        $this->wire($controller, $this->createMock(EntityManagerInterface::class), $manager);
+
+        // Past the token: no user is logged in here, so the anonymous check answers.
+        $response = $controller->voteUpAction(new Request([], ['_token' => $token, 'postId' => 1]));
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertStringContainsString('registered user', $response->getContent());
     }
 
     public function forgedTokens(): array
